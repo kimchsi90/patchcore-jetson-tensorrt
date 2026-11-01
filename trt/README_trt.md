@@ -276,3 +276,26 @@ Limits and notes: GIL contention was not isolated (process CPU was 1.25 cores fo
 pinned buffers: depth + workers + R x 0.79 MB (9.7 MB each for P2); P2 cannot be mixed with P1/P4 workers in one run (one buffer pool); ≤ 2 DLA contexts as before; latency is back-pressure dominated when saturated (see depth runs);
 all numbers are single 15 s runs at 10W; the max-mode numbers are NOT measured.
 Final run (as root, max mode): `export HOME=/home/<user>; REPS=3 SEQ=1 sh /home/<user>/e2e/run_suite_pipelined.sh max_pipe` (results in `~/e2e/results/max_pipe/`; DURATION=20 default; env RT=resize threads, QD=queue depth; config names as filter, e.g. `... max_pipe PIPE_P4_dla0_dla1_pt2`; SEQ=1 adds the sequential counterparts `SEQ_*`). Aggregate with `python parse_e2e.py <dir>`.
+
+## Resize study (train/inference resize alignment, PC fp32, onnxruntime CPU)
+Scripts: `pc\resize_study.py` (driver), `pc\make_knn_head_resize.py` (make_knn_head.py + RESIZE_METHOD switch only), `pc\run_all.sh`, `pc\run_c05.sh`.
+Results: `out\resize_study\results.csv` and one json per run. New banks: `patchcore\work\<cat>_256\resize_<tag>\`.
+Protocol: bank (dim 384, coreset 1%, seed 1) built from train images resized by M; test = originals resized in-pipeline by M (uint8), fused `_rmax_pf_pre` graph, host_post, metrics.
+Checks: pil_aa aligned reproduces p6_ort_summary exactly; rebuilding pil_aa on screw gives identical metrics (noise floor 0 at 4 decimals).
+cv2 linear vs torchvision bilinear antialias=False: mean abs 0.37, max 1 gray level, so tv_bilinear_noaa was dropped.
+Table columns: aligned image max / pixel / AUPRO ; mismatched (Pillow bank) pixel / AUPRO.
+| cat | M | aligned img/pix/AUPRO | mismatch pix/AUPRO |
+|---|---|---|---|
+| screw | pil_aa | .9625/.9801/.9127 | .9801/.9127 |
+| screw | area | .9535/.9852/.9258 | .9854/.9348 |
+| screw | linear | .9836/.9877/.9418 | .9862/.9383 |
+| bottle | pil_aa | 1/.9848/.9430 | same |
+| bottle | area | 1/.9847/.9431 | .9845/.9431 |
+| bottle | linear | 1/.9836/.9355 | .9829/.9395 |
+| wood | pil_aa | .9851/.9318/.8790 | same |
+| wood | area | .9868/.9339/.8854 | .9342/.8846 |
+| wood | linear | .9868/.9350/.8852 | .9362/.8837 |
+| toothbrush | pil_aa | .9111/.9880/.8690 | same |
+| toothbrush | area | .9000/.9873/.8610 | .9879/.8688 |
+| toothbrush | linear | .9056/.9877/.8661 | .9878/.8687 |
+Screw coreset 5% aligned: pil_aa .9664/.9889/.9409 ; linear .9779/.9920/.9572.

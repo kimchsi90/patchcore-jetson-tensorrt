@@ -2,24 +2,27 @@
 
 이상 탐지 모델 PatchCore를 Jetson Xavier NX(GPU와 DLA 2개)에서 TensorRT로 실행하고, RK3588 NPU 연구([patchcore-rk3588-npu](https://github.com/kimchsi90/patchcore-rk3588-npu))와 같은 항목을 재현하는 저장소임. NPU 설계를 그대로 옮기지 않고, Jetson의 특성에 맞게 최적화와 측정 방법을 바꾸는 것이 목표임.
 
-상태: 진행 중. JetPack 4.6.1(TensorRT 8.2.1)의 참고 측정값이 있고, 최신 JetPack 5.1.4(TensorRT 8.5) 측정은 보드 이미지 교체 후 진행함. 최종 수치는 [docs/REPORT_KR.md](docs/REPORT_KR.md)에 갱신함.
+상태: 진행 중. JetPack 5.1.4(TensorRT 8.5.2)에서 15개 카테고리 정확도, 속도, 전력, 열 안정성을 측정함. DLA 정확도와 그래프 수준 변환의 TensorRT 속도는 측정 전임. 자세한 내용은 [docs/REPORT_KR.md](docs/REPORT_KR.md)에 있음.
 
 ## 현재까지의 결과
 
-MVTec AD bottle, 입력 256, JetPack 4.6.1, 참고값임.
+MVTec AD, 입력 256, JetPack 5.1.4임.
 
-| 구성 | pixel AUROC | AUPRO | GPU 연산 시간 |
-|:---:|:---:|:---:|:---:|
-| fp32 onnxruntime (PC 기준) | 0.9848 | 0.9430 | 해당 없음 |
-| TensorRT fp16 | 0.9848 | 0.9429 | 16.1 ms |
-| TensorRT int8 전체, 엔트로피 보정 | 0.7655 | 0.2850 | 9.1 ms |
-| TensorRT int8 전체, minmax 보정 | 0.9832 | 0.9328 | 9.1 ms |
-| stem과 layer1.0만 fp16, 나머지 int8 | 0.9849 | 0.9431 | 10.2 ms |
+| 구성 (bottle) | pixel AUROC | AUPRO | FPS (최고 성능 모드) | 장당 에너지 |
+|:---:|:---:|:---:|:---:|:---:|
+| fp32 onnxruntime (PC 기준) | 0.9848 | 0.9430 | 해당 없음 | 해당 없음 |
+| TensorRT fp16 | 0.9848 | 0.9429 | 116 | 130 mJ |
+| int8 전체, 엔트로피 보정 | 0.7628 | 0.2796 | 해당 없음 | 해당 없음 |
+| int8 전체, minmax 보정 | 0.9833 | 0.9341 | 217 | 70 mJ |
+| stem과 layer1.0만 fp16, 나머지 int8 | 0.9849 | 0.9430 | 189 | 80 mJ |
 
-- 앞쪽 층만 fp16으로 두는 혼합 정밀도가 fp32와 같은 정확도로 fp16보다 37% 빠름 (10W 모드).
-- 최고 성능 모드(GPU 1109 MHz)에서는 혼합 정밀도 182 FPS(5.4 ms), fp16 116 FPS(8.5 ms)임.
+- 앞쪽 층만 fp16으로 두는 혼합 정밀도가 fp32와 같은 정확도로 fp16보다 처리량이 60% 이상 높음 (10W 기본 모드 100 FPS 대 62 FPS, 최고 성능 모드 189 FPS 대 116 FPS).
+- 15개 카테고리 평균에서 혼합 정밀도의 image AUROC는 0.9802(fp32 0.9816), pixel AUROC는 0.9784(0.9780), AUPRO는 0.9218(0.9215)임.
+- DLA 코어 2개와 GPU를 동시에 쓰면 GPU 단독보다 처리량이 37~41% 늘고 장당 에너지는 오히려 낮음(DLA int8 엔진의 정확도는 미측정).
+- 10분 연속 실행에서 GPU 클럭이 1109 MHz로 유지되고 온도는 69.5°C에서 멈춤.
 - anomalib 기본 설정 baseline은 TensorRT fp16에서 64 ms이며 RK3588의 977 ms보다 빠름. 정확도는 image 1.0000, pixel 0.9854임.
 - screw에서 coreset 1%를 5%로 올리면 pixel AUROC 0.9801에서 0.9889, AUPRO 0.9127에서 0.9409가 됨.
+- 후처리와 원본 해상도 리사이즈를 ONNX 그래프 안으로 옮겨도 정확도가 유지됨(PC 검증).
 
 ## 폴더 구성
 

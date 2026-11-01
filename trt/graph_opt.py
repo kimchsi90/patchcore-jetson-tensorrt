@@ -155,6 +155,12 @@ class GB:
         self.inits.append(numpy_helper.from_array(np.asarray(arr), name))
         return name
 
+    def empty_f32(self, name):
+        """Zero-length float32 initializer. Resize-11/12 needs roi (and scales when `sizes` is used) as real, possibly empty, tensors."""
+        if name not in {i.name for i in self.inits}:
+            self.const(name, np.zeros((0,), np.float32))
+        return name
+
     def op(self, op_type, ins, out, **attrs):
         self.nodes.append(helper.make_node(op_type, ins, [out], name=out + "_n", **attrs))
         return out
@@ -211,7 +217,7 @@ def sep_blur(g, src, tag, sigma):
 
 def nearest_up(g, src, tag, f):
     scales = g.const(f"{tag}_scales", np.array([1, 1, f, f], np.float32))
-    return g.op("Resize", [src, "", scales], f"{tag}_up", mode="nearest", coordinate_transformation_mode="asymmetric",
+    return g.op("Resize", [src, g.empty_f32(f"{tag}_roi_empty"), scales], f"{tag}_up", mode="nearest", coordinate_transformation_mode="asymmetric",
                 nearest_mode="floor")
 
 
@@ -258,7 +264,7 @@ def add_post(model, mode="conv", sigma=SIGMA, topk=TOPK, keep_raw=False):
                 res = nearest_up(g, blurred, "post_map", 8)
             else:
                 sizes = g.const("post_up_sizes", np.array([1, 1, size, size], np.int64))
-                res = g.op("Resize", [blurred, "", "", sizes], "post_map_up", mode="linear",
+                res = g.op("Resize", [blurred, g.empty_f32("post_map_roi_empty"), g.empty_f32("post_map_scales_empty"), sizes], "post_map_up", mode="linear",
                            coordinate_transformation_mode="half_pixel")
         else:
             raise ValueError(f"unknown post mode {mode}")
@@ -323,7 +329,7 @@ def add_fullres(model, h_in, mode, expose_resized=False):
                 cur = h_in // k
         if cur != s:
             sizes = g.const("fr_sizes", np.array([1, 3, s, s], np.int64))
-            g.op("Resize", [x, "", "", sizes], pre_in, mode="linear", coordinate_transformation_mode="half_pixel")
+            g.op("Resize", [x, g.empty_f32("pre_resize_roi_empty"), g.empty_f32("pre_resize_scales_empty"), sizes], pre_in, mode="linear", coordinate_transformation_mode="half_pixel")
         else:
             g.op("Identity", [x], pre_in)
     elif mode in ("matmul", "matmul_round"):

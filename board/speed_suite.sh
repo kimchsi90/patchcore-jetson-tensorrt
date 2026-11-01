@@ -5,8 +5,12 @@
 #   Phase C (max mode + fan forced): the same matrix, DLA0+DLA1+GPU concurrent runs, 10 minute soak. Always restores normal mode.
 # Watchdog: any CPU/GPU/AUX/AO thermal zone >= 85 C kills trtexec.
 H=/home/<user>
-R=$H/trt_early/run
-S=$H/trt_early/suite
+R=$H/trt_run
+S=$H/trt_run/suite
+# engines built by revalidate.sh on this JetPack: fp16, mixed (stem + layer1.0 fp16, rest int8), int8 minmax
+E_FP16=$R/fp16.engine
+E_MIX=$R/mixed_name.engine
+E_INT8=$R/int8mm.engine
 T=/usr/src/tensorrt/bin/trtexec
 ONNX=$R/fused_random384_c0.01_rmax_pf_pre.onnx
 mkdir -p "$S"
@@ -39,7 +43,7 @@ run() {
 
 matrix() {
   mode=$1
-  for e in fp16:$R/pre_fp16.engine mixed:$R/e_pin0_15.engine int8mm:$R/pre_int8_minmax.engine; do
+  for e in fp16:$E_FP16 mixed:$E_MIX int8mm:$E_INT8; do
     name=${e%%:*}; path=${e#*:}
     base="--loadEngine=$path --duration=15 --warmUp=1000 --avgRuns=100 --useSpinWait"
     run ${mode}_${name}_base      $base
@@ -76,7 +80,7 @@ for k in fp16 int8; do
   done
 done
 for k in fp16 int8; do
-  if [ "$k" = fp16 ]; then g=$R/pre_fp16.engine; else g=$R/e_pin0_15.engine; fi
+  if [ "$k" = fp16 ]; then g=$E_FP16; else g=$E_MIX; fi
   tegrastats --interval 200 > "$S/max_concurrent_${k}.tegra" 2>&1 &
   TP=$!
   $T --loadEngine=$S/dla0_${k}.engine --useDLACore=0 --duration=20 --warmUp=1000 --avgRuns=100 --useSpinWait > "$S/max_concurrent_${k}_dla0.log" 2>&1 &
@@ -93,6 +97,6 @@ done
 # 10 minute soak on the best mixed engine, 2 streams
 tegrastats --interval 1000 > "$S/max_soak.tegra" 2>&1 &
 TP=$!
-$T --loadEngine=$R/e_pin0_15.engine --duration=600 --warmUp=1000 --avgRuns=1000 --useSpinWait --streams=2 --threads > "$S/max_soak.log" 2>&1
+$T --loadEngine=$E_MIX --duration=600 --warmUp=1000 --avgRuns=1000 --useSpinWait --streams=2 --threads > "$S/max_soak.log" 2>&1
 kill $TP 2>/dev/null
 echo "$(date +%T) done soak" >> "$S/suite.log"

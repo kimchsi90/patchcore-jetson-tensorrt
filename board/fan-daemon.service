@@ -1,0 +1,12 @@
+[Unit]
+Description=Temperature or power driven fan control for the Jetson Xavier NX dev kit
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/bin/sh /usr/local/sbin/fan_daemon.sh
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

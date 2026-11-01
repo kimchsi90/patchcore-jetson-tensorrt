@@ -1,0 +1,1453 @@
+{
+ "reproduce_stored_reference_max_abs": 0.0,
+ "host_baseline": {
+  "image_auroc_max": 0.9625,
+  "image_auroc_top10": 0.9623,
+  "pixel_auroc": 0.9801,
+  "aupro": 0.9127
+ },
+ "files": {
+  "post": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_post.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 106806384,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Div",
+    "Identity",
+    "Max",
+    "MaxPool",
+    "Mul",
+    "Pad",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK",
+    "Transpose"
+   ]
+  },
+  "post_mm": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_post_mm.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 106871102,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Div",
+    "Identity",
+    "MatMul",
+    "Max",
+    "MaxPool",
+    "Mul",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK",
+    "Transpose"
+   ]
+  },
+  "lowres_blur": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_lowres_blur.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 106806201,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Div",
+    "Identity",
+    "Max",
+    "MaxPool",
+    "Mul",
+    "Pad",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK",
+    "Transpose"
+   ]
+  },
+  "lowres_blur_bilinear_up": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_lowres_blur_bilinear_up.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 106806240,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Div",
+    "Identity",
+    "Max",
+    "MaxPool",
+    "Mul",
+    "Pad",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK",
+    "Transpose"
+   ]
+  },
+  "fullres_bilinear": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_post_fullres1024_bilinear.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 106806669,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Div",
+    "Identity",
+    "Max",
+    "MaxPool",
+    "Mul",
+    "Pad",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK",
+    "Transpose"
+   ]
+  },
+  "fullres_pool_bilinear": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_post_fullres1024_pool_bilinear.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 106806563,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Div",
+    "Identity",
+    "Max",
+    "MaxPool",
+    "Mul",
+    "Pad",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK",
+    "Transpose"
+   ]
+  },
+  "fullres_matmul": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_post_fullres1024_matmul.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 108903930,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Div",
+    "Identity",
+    "MatMul",
+    "Max",
+    "MaxPool",
+    "Mul",
+    "Pad",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK",
+    "Transpose"
+   ]
+  },
+  "fullres_matmul_round": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_post_fullres1024_matmul_round.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 108904047,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Div",
+    "Floor",
+    "Identity",
+    "MatMul",
+    "Max",
+    "MaxPool",
+    "Mul",
+    "Pad",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK",
+    "Transpose"
+   ]
+  },
+  "split_A_stem_to_l2": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_split_A_stem_to_l2.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 16499822,
+   "ops": [
+    "Add",
+    "Conv",
+    "Div",
+    "MaxPool",
+    "Relu",
+    "Sub",
+    "Transpose"
+   ],
+   "inputs": [
+    [
+     "image_nhwc",
+     [
+      1,
+      256,
+      256,
+      3
+     ]
+    ]
+   ],
+   "outputs": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ]
+    ]
+   ],
+   "n_nodes": 57
+  },
+  "split_B_l3": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_split_B_l3.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 82906024,
+   "ops": [
+    "Add",
+    "Conv",
+    "Relu"
+   ],
+   "inputs": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ]
+    ]
+   ],
+   "outputs": [
+    [
+     "l3_feat",
+     [
+      1,
+      1024,
+      16,
+      16
+     ]
+    ]
+   ],
+   "n_nodes": 43
+  },
+  "split_C_head_m_xproj": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_split_C_head_m_xproj.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 7407929,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Max",
+    "ReduceMax",
+    "Resize"
+   ],
+   "inputs": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ]
+    ],
+    [
+     "l3_feat",
+     [
+      1,
+      1024,
+      16,
+      16
+     ]
+    ]
+   ],
+   "outputs": [
+    [
+     "m",
+     [
+      1,
+      1,
+      32,
+      32
+     ]
+    ],
+    [
+     "xproj",
+     [
+      1,
+      384,
+      32,
+      32
+     ]
+    ]
+   ],
+   "n_nodes": 13
+  },
+  "split_C_head_post": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_split_C_head_post.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 7410118,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Identity",
+    "Max",
+    "Mul",
+    "Pad",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK"
+   ],
+   "inputs": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ]
+    ],
+    [
+     "l3_feat",
+     [
+      1,
+      1024,
+      16,
+      16
+     ]
+    ]
+   ],
+   "outputs": [
+    [
+     "score_max",
+     [
+      1
+     ]
+    ],
+    [
+     "score_top10",
+     [
+      1
+     ]
+    ],
+    [
+     "map",
+     [
+      1,
+      1,
+      256,
+      256
+     ]
+    ]
+   ],
+   "n_nodes": 27
+  },
+  "split_AB_stem_to_l2_l3": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_split_AB_stem_to_l2_l3.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 99405697,
+   "ops": [
+    "Add",
+    "Conv",
+    "Div",
+    "MaxPool",
+    "Relu",
+    "Sub",
+    "Transpose"
+   ],
+   "inputs": [
+    [
+     "image_nhwc",
+     [
+      1,
+      256,
+      256,
+      3
+     ]
+    ]
+   ],
+   "outputs": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ]
+    ],
+    [
+     "l3_feat",
+     [
+      1,
+      1024,
+      16,
+      16
+     ]
+    ]
+   ],
+   "n_nodes": 100
+  },
+  "split_BC_l3_head_post": {
+   "file": "D:\\jetson_test\\patchcore\\work\\screw_256\\graphopt\\screw_split_BC_l3_head_post.onnx",
+   "opset": [
+    [
+     "ai.onnx",
+     12
+    ]
+   ],
+   "ir": 7,
+   "bytes": 90315885,
+   "ops": [
+    "Add",
+    "AveragePool",
+    "Constant",
+    "Conv",
+    "Identity",
+    "Max",
+    "Mul",
+    "Pad",
+    "ReduceMax",
+    "ReduceMean",
+    "ReduceSum",
+    "Relu",
+    "Reshape",
+    "Resize",
+    "Sqrt",
+    "Sub",
+    "TopK"
+   ],
+   "inputs": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ]
+    ]
+   ],
+   "outputs": [
+    [
+     "score_max",
+     [
+      1
+     ]
+    ],
+    [
+     "score_top10",
+     [
+      1
+     ]
+    ],
+    [
+     "map",
+     [
+      1,
+      1,
+      256,
+      256
+     ]
+    ]
+   ],
+   "n_nodes": 70
+  }
+ },
+ "post": {
+  "image_auroc_max": 0.9625,
+  "image_auroc_top10": 0.9623,
+  "pixel_auroc": 0.9801,
+  "aupro": 0.9127,
+  "max_abs_diff_score_max": 5.94333833170424e-05,
+  "max_abs_diff_score_top10": 2.7238676608476453e-05,
+  "max_abs_diff_map": 7.62939453125e-05,
+  "mean_abs_diff_map": 4.4856219574285205e-06,
+  "ort_seconds": 18.3
+ },
+ "post_mm": {
+  "image_auroc_max": 0.9625,
+  "image_auroc_top10": 0.9623,
+  "pixel_auroc": 0.9801,
+  "aupro": 0.9127,
+  "max_abs_diff_score_max": 5.94333833170424e-05,
+  "max_abs_diff_score_top10": 2.7238676608476453e-05,
+  "max_abs_diff_map": 7.2479248046875e-05,
+  "mean_abs_diff_map": 3.89129172617686e-06,
+  "ort_seconds": 17.4
+ },
+ "lowres_blur": {
+  "image_auroc_max": 0.9625,
+  "image_auroc_top10": 0.9623,
+  "pixel_auroc": 0.975,
+  "aupro": 0.8985,
+  "max_abs_diff_score_max": 5.94333833170424e-05,
+  "max_abs_diff_score_top10": 2.7238676608476453e-05,
+  "max_abs_diff_map": 7.7351226806640625,
+  "mean_abs_diff_map": 0.5171972513198853
+ },
+ "lowres_blur_bilinear_up": {
+  "image_auroc_max": 0.9625,
+  "image_auroc_top10": 0.9623,
+  "pixel_auroc": 0.9801,
+  "aupro": 0.912,
+  "max_abs_diff_score_max": 5.94333833170424e-05,
+  "max_abs_diff_score_top10": 2.7238676608476453e-05,
+  "max_abs_diff_map": 2.587519645690918,
+  "mean_abs_diff_map": 0.11449979245662689
+ },
+ "fullres_input_size": 1024,
+ "fullres_bilinear": {
+  "image_auroc_max": 0.966,
+  "image_auroc_top10": 0.9662,
+  "pixel_auroc": 0.9862,
+  "aupro": 0.9379,
+  "max_abs_diff_score_max": 7.998754823447776,
+  "max_abs_diff_score_top10": 8.71675880965988,
+  "max_abs_diff_map": 12.80875015258789,
+  "mean_abs_diff_map": 1.6712557077407837,
+  "resized_vs_png_mean_abs": 1.0753,
+  "resized_vs_png_max_abs": 51.25
+ },
+ "fullres_pool_bilinear": {
+  "image_auroc_max": 0.9791,
+  "image_auroc_top10": 0.9738,
+  "pixel_auroc": 0.9849,
+  "aupro": 0.9336,
+  "max_abs_diff_score_max": 2.965136796085588,
+  "max_abs_diff_score_top10": 2.558099090889037,
+  "max_abs_diff_map": 4.241451263427734,
+  "mean_abs_diff_map": 0.5412644743919373,
+  "resized_vs_png_mean_abs": 0.4732,
+  "resized_vs_png_max_abs": 17.88
+ },
+ "fullres_matmul": {
+  "image_auroc_max": 0.9633,
+  "image_auroc_top10": 0.958,
+  "pixel_auroc": 0.9792,
+  "aupro": 0.9088,
+  "max_abs_diff_score_max": 1.4496300669951552,
+  "max_abs_diff_score_top10": 1.1947365504549126,
+  "max_abs_diff_map": 3.0283660888671875,
+  "mean_abs_diff_map": 0.29143768548965454,
+  "resized_vs_png_mean_abs": 0.2645,
+  "resized_vs_png_max_abs": 0.94
+ },
+ "fullres_matmul_round": {
+  "image_auroc_max": 0.9633,
+  "image_auroc_top10": 0.959,
+  "pixel_auroc": 0.9801,
+  "aupro": 0.9122,
+  "max_abs_diff_score_max": 1.0406029673857802,
+  "max_abs_diff_score_top10": 0.9872208339021782,
+  "max_abs_diff_map": 2.3836288452148438,
+  "mean_abs_diff_map": 0.2551071345806122,
+  "resized_vs_png_mean_abs": 0.0971,
+  "resized_vs_png_max_abs": 1.0
+ },
+ "cut_candidates": [
+  {
+   "after": "/ext/feature_extractor/maxpool/MaxPool_output_0",
+   "n_live": 1,
+   "fp16_bytes": 524288,
+   "live": [
+    [
+     "/ext/feature_extractor/maxpool/MaxPool_output_0",
+     [
+      1,
+      64,
+      64,
+      64
+     ],
+     524288
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer1/layer1.0/act3/Relu_output_0",
+   "n_live": 1,
+   "fp16_bytes": 2097152,
+   "live": [
+    [
+     "/ext/feature_extractor/layer1/layer1.0/act3/Relu_output_0",
+     [
+      1,
+      256,
+      64,
+      64
+     ],
+     2097152
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer1/layer1.1/act3/Relu_output_0",
+   "n_live": 1,
+   "fp16_bytes": 2097152,
+   "live": [
+    [
+     "/ext/feature_extractor/layer1/layer1.1/act3/Relu_output_0",
+     [
+      1,
+      256,
+      64,
+      64
+     ],
+     2097152
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer1/layer1.2/act3/Relu_output_0",
+   "n_live": 1,
+   "fp16_bytes": 2097152,
+   "live": [
+    [
+     "/ext/feature_extractor/layer1/layer1.2/act3/Relu_output_0",
+     [
+      1,
+      256,
+      64,
+      64
+     ],
+     2097152
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer2/layer2.0/act3/Relu_output_0",
+   "n_live": 1,
+   "fp16_bytes": 1048576,
+   "live": [
+    [
+     "/ext/feature_extractor/layer2/layer2.0/act3/Relu_output_0",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer2/layer2.1/act3/Relu_output_0",
+   "n_live": 1,
+   "fp16_bytes": 1048576,
+   "live": [
+    [
+     "/ext/feature_extractor/layer2/layer2.1/act3/Relu_output_0",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer2/layer2.2/act3/Relu_output_0",
+   "n_live": 1,
+   "fp16_bytes": 1048576,
+   "live": [
+    [
+     "/ext/feature_extractor/layer2/layer2.2/act3/Relu_output_0",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ]
+   ]
+  },
+  {
+   "after": "l2_feat",
+   "n_live": 1,
+   "fp16_bytes": 1048576,
+   "live": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer3/layer3.0/act3/Relu_output_0",
+   "n_live": 2,
+   "fp16_bytes": 1572864,
+   "live": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ],
+    [
+     "/ext/feature_extractor/layer3/layer3.0/act3/Relu_output_0",
+     [
+      1,
+      1024,
+      16,
+      16
+     ],
+     524288
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer3/layer3.1/act3/Relu_output_0",
+   "n_live": 2,
+   "fp16_bytes": 1572864,
+   "live": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ],
+    [
+     "/ext/feature_extractor/layer3/layer3.1/act3/Relu_output_0",
+     [
+      1,
+      1024,
+      16,
+      16
+     ],
+     524288
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer3/layer3.2/act3/Relu_output_0",
+   "n_live": 2,
+   "fp16_bytes": 1572864,
+   "live": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ],
+    [
+     "/ext/feature_extractor/layer3/layer3.2/act3/Relu_output_0",
+     [
+      1,
+      1024,
+      16,
+      16
+     ],
+     524288
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer3/layer3.3/act3/Relu_output_0",
+   "n_live": 2,
+   "fp16_bytes": 1572864,
+   "live": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ],
+    [
+     "/ext/feature_extractor/layer3/layer3.3/act3/Relu_output_0",
+     [
+      1,
+      1024,
+      16,
+      16
+     ],
+     524288
+    ]
+   ]
+  },
+  {
+   "after": "/ext/feature_extractor/layer3/layer3.4/act3/Relu_output_0",
+   "n_live": 2,
+   "fp16_bytes": 1572864,
+   "live": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ],
+    [
+     "/ext/feature_extractor/layer3/layer3.4/act3/Relu_output_0",
+     [
+      1,
+      1024,
+      16,
+      16
+     ],
+     524288
+    ]
+   ]
+  },
+  {
+   "after": "l3_feat",
+   "n_live": 2,
+   "fp16_bytes": 1572864,
+   "live": [
+    [
+     "l2_feat",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ],
+    [
+     "l3_feat",
+     [
+      1,
+      1024,
+      16,
+      16
+     ],
+     524288
+    ]
+   ]
+  },
+  {
+   "after": "/pool/AveragePool_output_0",
+   "n_live": 2,
+   "fp16_bytes": 1572864,
+   "live": [
+    [
+     "l3_feat",
+     [
+      1,
+      1024,
+      16,
+      16
+     ],
+     524288
+    ],
+    [
+     "/pool/AveragePool_output_0",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ]
+   ]
+  },
+  {
+   "after": "/pool_1/AveragePool_output_0",
+   "n_live": 2,
+   "fp16_bytes": 1572864,
+   "live": [
+    [
+     "/pool/AveragePool_output_0",
+     [
+      1,
+      512,
+      32,
+      32
+     ],
+     1048576
+    ],
+    [
+     "/pool_1/AveragePool_output_0",
+     [
+      1,
+      1024,
+      16,
+      16
+     ],
+     524288
+    ]
+   ]
+  },
+  {
+   "after": "proj2",
+   "n_live": 4,
+   "fp16_bytes": 1310720,
+   "live": [
+    [
+     "/pool_1/AveragePool_output_0",
+     [
+      1,
+      1024,
+      16,
+      16
+     ],
+     524288
+    ],
+    [
+     "/Constant_4_output_0",
+     [
+      0
+     ],
+     0
+    ],
+    [
+     "/Constant_5_output_0",
+     [
+      0
+     ],
+     0
+    ],
+    [
+     "proj2",
+     [
+      1,
+      384,
+      32,
+      32
+     ],
+     786432
+    ]
+   ]
+  },
+  {
+   "after": "proj3",
+   "n_live": 4,
+   "fp16_bytes": 983040,
+   "live": [
+    [
+     "/Constant_4_output_0",
+     [
+      0
+     ],
+     0
+    ],
+    [
+     "/Constant_5_output_0",
+     [
+      0
+     ],
+     0
+    ],
+    [
+     "proj2",
+     [
+      1,
+      384,
+      32,
+      32
+     ],
+     786432
+    ],
+    [
+     "proj3",
+     [
+      1,
+      384,
+      16,
+      16
+     ],
+     196608
+    ]
+   ]
+  },
+  {
+   "after": "proj3_up",
+   "n_live": 2,
+   "fp16_bytes": 1572864,
+   "live": [
+    [
+     "proj2",
+     [
+      1,
+      384,
+      32,
+      32
+     ],
+     786432
+    ],
+    [
+     "proj3_up",
+     [
+      1,
+      384,
+      32,
+      32
+     ],
+     786432
+    ]
+   ]
+  },
+  {
+   "after": "xproj",
+   "n_live": 1,
+   "fp16_bytes": 786432,
+   "live": [
+    [
+     "xproj",
+     [
+      1,
+      384,
+      32,
+      32
+     ],
+     786432
+    ]
+   ]
+  },
+  {
+   "after": "m",
+   "n_live": 2,
+   "fp16_bytes": 788480,
+   "live": [
+    [
+     "xproj",
+     [
+      1,
+      384,
+      32,
+      32
+     ],
+     786432
+    ],
+    [
+     "m",
+     [
+      1,
+      1,
+      32,
+      32
+     ],
+     2048
+    ]
+   ]
+  },
+  {
+   "after": "score_max",
+   "n_live": 3,
+   "fp16_bytes": 4098,
+   "live": [
+    [
+     "post_s",
+     [
+      1,
+      1,
+      32,
+      32
+     ],
+     2048
+    ],
+    [
+     "post_flat",
+     [
+      1,
+      1024
+     ],
+     2048
+    ],
+    [
+     "score_max",
+     [
+      1
+     ],
+     2
+    ]
+   ]
+  },
+  {
+   "after": "map",
+   "n_live": 3,
+   "fp16_bytes": 131076,
+   "live": [
+    [
+     "score_max",
+     [
+      1
+     ],
+     2
+    ],
+    [
+     "score_top10",
+     [
+      1
+     ],
+     2
+    ],
+    [
+     "map",
+     [
+      1,
+      1,
+      256,
+      256
+     ],
+     131072
+    ]
+   ]
+  }
+ ],
+ "input_bytes_256_uint8": 196608,
+ "split_chain_max_abs_diff": {
+  "3way_post": 0.0,
+  "3way_m": 0.0,
+  "3way_xproj": 0.0,
+  "2way_A|BC": 0.0,
+  "2way_AB|C": 0.0
+ },
+ "dla_static": {
+  "backbone_stem_to_l2 (A)": {
+   "Add": {
+    "count": 7,
+    "dla": "ok",
+    "note": "ElementWise Sum, same-shape or NCHW broadcast"
+   },
+   "Conv": {
+    "count": 24,
+    "dla": "ok",
+    "note": "kernel [1,32], stride [1,8], in/out channels [1,8192], fp16/int8; fails the CBUF check for very large weights"
+   },
+   "Div": {
+    "count": 1,
+    "dla": "limited",
+    "note": "ElementWise Div needs INT8 or FP32-constant divisor (preproc Div by a per-channel constant -> Scale layer)"
+   },
+   "MaxPool": {
+    "count": 1,
+    "dla": "ok",
+    "note": "window [1,8], pad [0,7], stride [1,16]"
+   },
+   "Relu": {
+    "count": 22,
+    "dla": "ok",
+    "note": "Activation layer"
+   },
+   "Sub": {
+    "count": 1,
+    "dla": "limited",
+    "note": "ElementWise Sub is listed, but the m operand [1,1,G,G] broadcasts over channels only in the Sub of d2 (no channel dim use)"
+   },
+   "Transpose": {
+    "count": 1,
+    "dla": "limited",
+    "note": "Shuffle: 4D, batch dim untouched, non-batch dims <= 8192; the NHWC->NCHW input transpose of the base graph is unlikely to be a good DLA layer; use an NHWC/HWC4 input format or keep it on GPU"
+   }
+  },
+  "layer3 (B)": {
+   "Add": {
+    "count": 6,
+    "dla": "ok",
+    "note": "ElementWise Sum, same-shape or NCHW broadcast"
+   },
+   "Conv": {
+    "count": 19,
+    "dla": "ok",
+    "note": "kernel [1,32], stride [1,8], in/out channels [1,8192], fp16/int8; fails the CBUF check for very large weights"
+   },
+   "Relu": {
+    "count": 18,
+    "dla": "ok",
+    "note": "Activation layer"
+   }
+  },
+  "head (C, m/xproj)": {
+   "Add": {
+    "count": 1,
+    "dla": "ok",
+    "note": "ElementWise Sum, same-shape or NCHW broadcast"
+   },
+   "AveragePool": {
+    "count": 2,
+    "dla": "limited",
+    "note": "window [1,8] only; the fullres pool k=3/4 fits"
+   },
+   "Constant": {
+    "count": 2,
+    "dla": "unknown",
+    "note": ""
+   },
+   "Conv": {
+    "count": 4,
+    "dla": "ok",
+    "note": "kernel [1,32], stride [1,8], in/out channels [1,8192], fp16/int8; fails the CBUF check for very large weights"
+   },
+   "Max": {
+    "count": 1,
+    "dla": "unknown",
+    "note": ""
+   },
+   "ReduceMax": {
+    "count": 2,
+    "dla": "limited",
+    "note": "Reduce MAX over CHW axes only on the latest doc; on Xavier DLA 1.0 / TRT 8.5 [Unknown], the channel max of the 2140-wide kNN output (2140 <= 8192) may fit"
+   },
+   "Resize": {
+    "count": 1,
+    "dla": "limited",
+    "note": "4 scales, first two 1, last two integers: nearest [1,32], bilinear [1,4]. The head's 16->32 bilinear x2 fits; the post x8 nearest fits; Resize with `sizes` (fullres) or from 900 -> 256 does not"
+   }
+  },
+  "post (conv blur)": {
+   "Conv": {
+    "count": 2,
+    "dla": "ok",
+    "note": "kernel [1,32], stride [1,8], in/out channels [1,8192], fp16/int8; fails the CBUF check for very large weights"
+   },
+   "Identity": {
+    "count": 1,
+    "dla": "ok",
+    "note": "removed by the parser"
+   },
+   "Mul": {
+    "count": 1,
+    "dla": "limited",
+    "note": "ElementWise Product; fine for same-shape x*x"
+   },
+   "Pad": {
+    "count": 1,
+    "dla": "no",
+    "note": "no Padding layer on DLA (reflect mode is not available in any case)"
+   },
+   "ReduceMax": {
+    "count": 1,
+    "dla": "limited",
+    "note": "Reduce MAX over CHW axes only on the latest doc; on Xavier DLA 1.0 / TRT 8.5 [Unknown], the channel max of the 2140-wide kNN output (2140 <= 8192) may fit"
+   },
+   "ReduceMean": {
+    "count": 1,
+    "dla": "no",
+    "note": "Reduce MEAN not supported"
+   },
+   "ReduceSum": {
+    "count": 1,
+    "dla": "no",
+    "note": "no Reduce SUM on DLA (only MAX); use GPU (or a 1x1 Conv with all-ones weights over channels to stay on DLA)"
+   },
+   "Relu": {
+    "count": 1,
+    "dla": "ok",
+    "note": "Activation layer"
+   },
+   "Reshape": {
+    "count": 1,
+    "dla": "limited",
+    "note": "Shuffle: 4D only, non-batch dims <= 8192; the [1,1024] flatten and the 2D MatMul reshapes are not DLA-able"
+   },
+   "Resize": {
+    "count": 1,
+    "dla": "limited",
+    "note": "4 scales, first two 1, last two integers: nearest [1,32], bilinear [1,4]. The head's 16->32 bilinear x2 fits; the post x8 nearest fits; Resize with `sizes` (fullres) or from 900 -> 256 does not"
+   },
+   "Sqrt": {
+    "count": 1,
+    "dla": "no",
+    "note": "Unary: only ABS/SIN/COS/ATAN (INT8) listed on the latest doc"
+   },
+   "Sub": {
+    "count": 1,
+    "dla": "limited",
+    "note": "ElementWise Sub is listed, but the m operand [1,1,G,G] broadcasts over channels only in the Sub of d2 (no channel dim use)"
+   },
+   "TopK": {
+    "count": 1,
+    "dla": "no",
+    "note": "not in the DLA layer list"
+   }
+  },
+  "_source": "documentation (TensorRT DLA layer-restriction page, latest version, plus memory); NOT measured, TRT 8.5 on Xavier DLA 1.0 may be stricter"
+ },
+ "fp16_post_sim": {
+  "image_auroc_max": 0.9628,
+  "image_auroc_top10": 0.9619,
+  "pixel_auroc": 0.9801,
+  "aupro": 0.9127,
+  "max_abs_diff_score_max": 0.049931367936849824,
+  "max_abs_diff_score_top10": 0.02207130258315715,
+  "max_abs_diff_map": 0.058017730712890625,
+  "mean_abs_diff_map": 0.004111496731638908,
+  "note": "numpy emulation: x,m rounded to fp16, ||x||^2 fp32-accumulated then rounded to fp16, d2 in fp16; not a TensorRT run"
+ }
+}

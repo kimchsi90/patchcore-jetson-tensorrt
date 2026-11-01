@@ -14,8 +14,9 @@ import sys
 RE_QPS = re.compile(r"Throughput:\s*([\d.]+)\s*qps")
 RE_GPU = re.compile(r"GPU Compute Time:.*?mean\s*=\s*([\d.]+)\s*ms")
 RE_LAT = re.compile(r"\] Latency:.*?mean\s*=\s*([\d.]+)\s*ms")
-RE_PWR = re.compile(r"VDD_IN (\d+)/(\d+)")
-RE_GR3D = re.compile(r"GR3D_FREQ (\d+)%(?:@(\d+))?")
+# JetPack 4: "VDD_IN 5068/5068", "GR3D_FREQ 99%@1109"; JetPack 5: "VDD_IN 5561mW/5561mW", "GR3D_FREQ 0%@[114]" (bracket = per-TPC list)
+RE_PWR = re.compile(r"VDD_IN (\d+)(?:mW)?/(\d+)(?:mW)?")
+RE_GR3D = re.compile(r"GR3D_FREQ (\d+)%(?:@\[?(\d+))?")
 RE_GTEMP = re.compile(r"GPU@([\d.]+)C")
 
 

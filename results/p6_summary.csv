@@ -1,0 +1,15 @@
+category,status,detail
+cable,OK,train=224 test=150
+capsule,OK,train=219 test=132
+carpet,OK,train=280 test=117
+grid,OK,train=264 test=78
+hazelnut,OK,train=391 test=110
+leather,OK,train=245 test=124
+metal_nut,OK,train=220 test=115
+pill,OK,train=267 test=167
+screw,OK,train=320 test=160
+tile,OK,train=230 test=117
+toothbrush,OK,train=60 test=42
+transistor,OK,train=213 test=100
+wood,OK,train=247 test=79
+zipper,OK,train=240 test=151

@@ -1,0 +1,146 @@
+# PatchCore의 Jetson Xavier NX TensorRT 이식 보고서
+
+작성 시점의 상태: JetPack 4.6.1(TensorRT 8.2.1) 참고 측정 완료, JetPack 5.1.4(TensorRT 8.5) 측정 대기. 4.6.1의 수치는 5.1.4에서 다시 재서 갱신함.
+
+## 요약
+
+- PatchCore 최적화 모델을 Jetson Xavier NX의 TensorRT에서 실행함. bottle에서 TensorRT fp16은 PC fp32와 같은 정확도(pixel AUROC 0.9848, AUPRO 0.9429)를 보임.
+- RK3588 NPU는 모든 층을 INT8로 양자화해야 했으나 Jetson에서는 민감한 앞쪽 층(stem과 layer1.0)만 fp16으로 남길 수 있음. 이 혼합 정밀도가 정확도를 fp32와 같게 유지하면서 fp16보다 37% 빠름.
+- anomalib 기본 설정 baseline은 TensorRT fp16에서 64 ms로 RK3588의 977 ms보다 빠르며 정확도도 같음.
+- screw에서 coreset 비율을 1%에서 5%로 올리면 정확도가 오름. 1% coreset은 NPU에 맞춘 선택이었고 GPU에서는 재검토 대상임.
+- 15개 카테고리의 데이터와 ONNX, fp32 기준 정확도를 모두 준비함. 카테고리별 TensorRT 정확도와 5.1.4 속도는 아직 측정하지 않음.
+
+## 환경
+
+| 항목 | 내용 |
+|:---:|:---:|
+| 보드 | Jetson Xavier NX Developer Kit(8GB 공유 메모리), microSD 부팅 |
+| 측정 시점 소프트웨어 | JetPack 4.6.1, L4T R32.7.1, TensorRT 8.2.1, CUDA 10.2, Python 3.6 |
+| 이동 대상 | JetPack 5.1.4, L4T R35.6, TensorRT 8.5 계열 |
+| PC | Windows 11, RTX 3060 Ti 8GB, torch 2.6.0+cu124, onnxruntime 1.23.2, anomalib 2.7.0 |
+| 데이터 | MVTec AD 15개 카테고리, 입력 256 |
+
+## 모델과 파이프라인
+
+- backbone: WideResNet50의 layer2와 layer3, 1536 채널.
+- 차원 축소: 고정 random projection으로 384 채널.
+- memory bank: coreset 1%(bottle 기준 2140행)이며 k-center greedy로 선택함.
+- kNN: 1x1 Conv로 `m = max(2*x*b - ||b||^2)`를 계산하고 프로젝션을 업샘플 앞으로 옮긴 융합 ONNX 하나로 만듦.
+- 점수: `sqrt(‖xproj‖² − m)`이며 image score는 상위 10개 patch 평균 또는 최댓값임.
+- 입력: 원본 RGB를 NHWC float32 0~255로 받고 정규화와 NCHW 변환을 그래프 안에서 처리함.
+
+RK3588에서 쓴 변환 중 `rewrite_max_tree`, `rewrite_raw_out`, 카테고리별 분할 단계 탐색, mean과 std를 변환 설정에 넣는 방식, `mmse` 보정은 NPU 전용이라 가져오지 않음.
+
+## fp32 기준 정확도
+
+PC의 onnxruntime fp32 결과이며 이후 모든 TensorRT 결과를 이 값과 비교함. 입력 256, 384 채널, coreset 1%임.
+
+| 카테고리 | image AUROC | pixel AUROC | AUPRO |
+|:---:|:---:|:---:|:---:|
+| bottle | 1.0000 | 0.9848 | 0.9430 |
+| cable | 0.9811 | 0.9804 | 0.9251 |
+| capsule | 0.9916 | 0.9893 | 0.9190 |
+| carpet | 0.9823 | 0.9905 | 0.9465 |
+| grid | 0.9749 | 0.9763 | 0.9002 |
+| hazelnut | 1.0000 | 0.9874 | 0.9471 |
+| leather | 1.0000 | 0.9918 | 0.9755 |
+| metal_nut | 1.0000 | 0.9860 | 0.9366 |
+| pill | 0.9602 | 0.9825 | 0.9435 |
+| screw | 0.9625 | 0.9801 | 0.9127 |
+| tile | 1.0000 | 0.9563 | 0.8628 |
+| toothbrush | 0.9111 | 0.9880 | 0.8690 |
+| transistor | 0.9921 | 0.9634 | 0.9325 |
+| wood | 0.9851 | 0.9318 | 0.8790 |
+| zipper | 0.9827 | 0.9810 | 0.9304 |
+| 평균 | 0.9816 | 0.9780 | 0.9215 |
+
+- image AUROC는 점수를 최댓값으로 잡은 값임. 상위 10개 평균으로 잡으면 평균 0.9834임.
+- RK3588 보고서의 입력 256 구성(상위 10개 평균 image 0.9805, AUPRO 0.9156)과 같은 범위임.
+- 모든 카테고리에서 최대 |m|은 7680, 최대 ‖xproj‖²은 9211이며 fp16 한계 65504보다 충분히 작음.
+
+## 정밀도 실험
+
+bottle, 입력 256, 83장, JetPack 4.6.1, 10W 기본 모드임.
+
+| 구성 | image AUROC | pixel AUROC | AUPRO | GPU 연산 시간 |
+|:---:|:---:|:---:|:---:|:---:|
+| fp32 onnxruntime | 1.0000 | 0.9848 | 0.9430 | 해당 없음 |
+| TensorRT fp16 | 1.0000 | 0.9848 | 0.9429 | 16.1 ms |
+| int8 전체, 엔트로피 보정 | 0.4690 | 0.7655 | 0.2850 | 9.1 ms |
+| int8 전체, minmax 보정 | 1.0000 | 0.9832 | 0.9328 | 9.1 ms |
+| stem과 layer1.0 fp16, 나머지 int8 (엔트로피) | 1.0000 | 0.9849 | 0.9431 | 10.2 ms |
+| layer3만 int8 | 1.0000 | 0.9849 | 0.9433 | 12.9 ms |
+
+- 엔트로피 보정을 모든 층에 쓰면 정확도가 무너짐. 원인은 head가 아니라 앞쪽 backbone임.
+- head를 fp16으로 고정해도 붕괴는 그대로이고, stem과 layer1.0을 fp16으로 두면 사라짐. 엔트로피 보정이 layer1의 값 범위를 minmax의 절반 수준으로 잘라 내는 것이 원인으로 보임.
+- 처음에는 `‖xproj‖² − m`이 5000 안팎의 두 값의 차이라서 head의 INT8이 문제일 것으로 가정했으나 실험으로 기각됨.
+- 혼합 정밀도 엔진은 fp32와 같은 정확도로 fp16보다 37% 빠름. 층 번호는 TensorRT 8.5에서 달라질 수 있어 이름 기준으로 지정해야 함.
+
+## 구성 탐색
+
+fp16을 쓸 수 있으면 NPU 때문에 고른 구성을 다시 열 수 있음. 입력 256, fp32 onnxruntime 기준임.
+
+| 카테고리 | 차원 | coreset | bank 행 수 | image AUROC | pixel AUROC | AUPRO |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| screw | 384 | 1% | 3276 | 0.9625 | 0.9801 | 0.9127 |
+| screw | 384 | 5% | 16384 | 0.9664 | 0.9889 | 0.9409 |
+| screw | 384 | 10% | 32768 | 0.9627 | 0.9894 | 0.9442 |
+| screw | 768 | 1% | 3276 | 0.9701 | 0.9797 | 0.9147 |
+| screw | 768 | 5% | 16384 | 0.9652 | 0.9878 | 0.9361 |
+| bottle | 384 | 1% | 2140 | 1.0000 | 0.9848 | 0.9430 |
+| bottle | 384 | 10% | 21401 | 1.0000 | 0.9851 | 0.9437 |
+
+- 위치 지표는 coreset 비율이 지배함. 차원을 384에서 768이나 1536으로 올려도 이득이 거의 없음.
+- bottle은 모든 구성에서 같은 값으로 포화되어 구성을 가리지 못함. 구성 선택은 screw 같은 카테고리로 해야 함.
+- coreset 5%의 속도 비용은 5.1.4에서 측정하며 전체 표는 `results/p7_sweep_summary.csv`에 있음.
+
+## baseline
+
+anomalib 기본 설정(coreset 10%, 1536 채널)을 TensorRT에서 실행함.
+
+| 구성 | image AUROC | pixel AUROC | AUPRO | 지연 |
+|:---:|:---:|:---:|:---:|:---:|
+| onnxruntime fp32 | 1.0000 | 0.9853 | 0.9437 | 해당 없음 |
+| TensorRT fp16, batch 1 | 1.0000 | 0.9854 | 0.9447 | 64.3 ms |
+| TensorRT fp16, batch 2 | 1.0000 | 0.9854 | 0.9448 | 60.4 ms/장 |
+| RK3588 RKNN fp16 | 1.0000 | 0.9854 | 값 없음 | 977 ms |
+
+- TensorRT가 읽도록 ONNX를 네 곳 고쳤음: opset 17 TorchScript 내보내기, 후처리의 빈 상수 폴딩, Flatten을 Reshape로 교체, `TopK(largest=0)`을 부호 반전 후 `TopK(largest=1)`로 교체함.
+- 마지막 수정 전에는 TensorRT 8.2.1이 `largest=0`을 무시해서 image AUROC가 0.63이었음.
+- 엔진 크기는 384 MB, 빌드는 약 490초이며 빌드 중 여유 메모리가 100~300 MB까지 내려감.
+
+## 속도와 전력
+
+JetPack 4.6.1, bottle, 입력 256이며 참고값임. 전력은 tegrastats의 VDD_IN(모듈 전체)임.
+
+| 엔진 | 모드 | FPS | GPU 연산 | 평균 전력 | 장당 에너지 |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| fp16 | 10W 기본 | 61.5 | 16.1 ms | 9.3 W | 151 mJ |
+| 혼합 정밀도 | 10W 기본 | 96.7 | 10.2 ms | 9.2 W | 95 mJ |
+| int8 minmax | 10W 기본 | 107.5 | 9.1 ms | 9.0 W | 83 mJ |
+| fp16 | 최고 성능 | 116.1 | 8.5 ms | 14.0 W | 121 mJ |
+| 혼합 정밀도 | 최고 성능 | 181.8 | 5.4 ms | 13.2 W | 72 mJ |
+| int8 minmax | 최고 성능 | 203.0 | 4.8 ms | 12.8 W | 63 mJ |
+
+- 최고 성능 모드는 20W 6코어와 `jetson_clocks`이며 GPU가 1109 MHz로 고정됨. 기본 모드의 GPU는 평균 약 510 MHz임.
+- CUDA Graph와 데이터 전송 제외는 속도를 2% 미만 바꿈. 모델이 GPU 연산에 묶여 있음.
+- 스트림을 늘리면 GPU에 여유가 있을 때만 효과가 있음. 혼합 정밀도는 최고 성능 모드에서 스트림 3개로 182 FPS에서 214 FPS가 되고 프레임당 지연은 늘어남.
+- DLA 코어 0 하나로 fp16 모델을 52 FPS(19 ms), 6.8 W로 실행했고 이때 GPU 사용률은 4%임. DLA 2개와 GPU의 동시 실행, 10분 열 안정성은 측정하지 못함.
+- 이 수치는 GPU 연산 시간 중심이며 전처리와 후처리를 포함한 끝단 처리량이 아님.
+
+## 보드 준비에서 확인한 사항
+
+- 처음 JetPack 5.x를 쓰는 Xavier NX 개발자 키트는 QSPI 펌웨어를 먼저 올려야 함. 4.x 시스템에서 `flash_erase`와 `flashcp`로 쓰고 전체를 다시 읽어 해시를 비교함. 기존 QSPI는 먼저 백업함.
+- QSPI를 올린 뒤에는 4.6.1 카드로 부팅되지 않을 수 있으므로 되돌리는 경로로 쓰면 안 됨.
+- 팬의 `rpm_measured`는 항상 0임. 이 보드는 회전수 센서를 켤 수 없어서 고장의 증거가 아님.
+- `target_pwm`에 0을 쓰면 자동 온도 제어가 꺼져 67°C에서도 팬이 멈춤. `board/fan_daemon.sh`가 온도 구간별로 PWM을 쓰며, 성능 측정 중에는 최대로 고정함.
+- Windows 관리자 권한 콘솔(conhost)에서는 Shift+Enter를 구분하지 못해 Windows Terminal로 실행해야 함.
+
+## 확인하지 못한 항목
+
+- JetPack 5.1.4와 TensorRT 8.5에서의 모든 속도, 전력, 정확도. 엔진과 보정 캐시를 다시 만들어야 함.
+- 나머지 14개 카테고리의 TensorRT 정확도. screw에서 int8 손실이 드러날 가능성이 있음.
+- DLA 2개와 GPU의 동시 실행, 단계별 CPU, GPU, DLA 배치, 그래프 수준 최적화(후처리를 엔진 안으로 이동, 원본 해상도 입력에서의 리사이즈)의 속도 효과.
+- 10분 이상의 열 안정성과 GPU 클럭 하락 여부.
+- 팬이 실제로 도는지의 직접 확인. 온도가 67°C에서 51°C로 내려간 것이 간접 증거임.
+- MVTec AD의 라이선스는 CC BY-NC-SA 4.0이며 비상업 용도로만 씀.

@@ -1,0 +1,1 @@
+{"image_auroc": 1.0, "pixel_auroc": 0.9853, "aupro": 0.9437, "n": 83, "score_range": [0.1778271496295929, 1.0], "map_range": [0.02073192596435547, 1.0], "map_frac_saturated_1.0": 3.989346056099398e-05, "map_frac_0": 0.0}

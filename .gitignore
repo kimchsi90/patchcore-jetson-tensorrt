@@ -1,0 +1,22 @@
+# data, models and engines are never committed (MVTec AD licence forbids redistribution, files are large and TensorRT-version specific)
+datasets/
+work/
+downloads/
+backup/
+*.onnx
+*.engine
+*.plan
+*.zip
+*.tar.xz
+*.gz
+*.tbz2
+*.img
+*.npy
+*.cache
+*.rknn
+*.ckpt
+# logs and local state
+*.log
+*.err
+*.flag
+__pycache__/

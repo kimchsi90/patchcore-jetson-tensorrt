@@ -1,0 +1,1 @@
+{"image_auroc_max": 0.941, "image_auroc_top10": 0.9391, "pixel_auroc": 0.9713, "aupro": 0.881, "sigma": 4.0, "peak_abs_m": 7591.1630859375, "peak_xproj_sq_norm": 8271.256002726932, "fp16_limit": 65504, "n": 160}

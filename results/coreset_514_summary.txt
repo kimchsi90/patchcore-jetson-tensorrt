@@ -1,0 +1,4 @@
+screw, input 256, 384 channels, mixed engine (stem+layer1.0+head fp16, rest int8), max mode, trtexec 20 s
+coreset 0.01    174.3 FPS  GPU 5.63 ms  14616 mW   83.9 mJ/img
+coreset 0.05     92.8 FPS  GPU 10.68 ms  15919 mW  171.6 mJ/img
+coreset 0.1      57.6 FPS  GPU 17.26 ms  16291 mW  282.8 mJ/img

@@ -1,0 +1,2 @@
+# board shell scripts must keep LF, otherwise they fail on the Jetson after a Windows checkout
+*.sh text eol=lf

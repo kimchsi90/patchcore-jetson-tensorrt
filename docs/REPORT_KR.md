@@ -1,6 +1,6 @@
 # PatchCore의 Jetson Xavier NX TensorRT 이식 보고서
 
-상태: JetPack 5.1.4(TensorRT 8.5.2)에서 정확도 15개 카테고리, 속도, 전력, 열 안정성, DLA 조합을 측정함. 끝단 처리량은 GPU 구성에서 측정했고 DLA 단계 분할 파이프라인은 미측정임. JetPack 4.6.1(TensorRT 8.2.1)의 값은 비교용으로 별도 표기함.
+상태: JetPack 5.1.4(TensorRT 8.5.2)에서 정확도 15개 카테고리, 속도, 전력, 열 안정성, DLA 조합, 끝단 처리량(순차, 단계 분할, 파이프라인), baseline을 측정함. 끝단 처리량은 bottle에서만 측정함. JetPack 4.6.1(TensorRT 8.2.1)의 값은 비교용으로 별도 표기함.
 
 ## 요약
 
@@ -388,8 +388,7 @@ PC에서 onnxruntime으로 검증한 결과이며 TensorRT 실행과 속도 측�
 
 ## 확인하지 못한 항목
 
-- GPU와 DLA를 하나의 파이프라인으로 묶었을 때 카테고리별 끝단 지연은 bottle에서만 측정함.
 - DLA 구성에서 입력 정규화와 head ReduceMax의 GPU 폴백 제거.
-- 끝단 처리량은 bottle에서만 측정함. 카테고리마다 bank 크기가 달라 속도가 달라짐.
+- 끝단 처리량과 지연은 bottle에서만 측정함. 카테고리마다 이미지 크기와 bank 크기가 달라 속도가 달라질 수 있음.
 - 전력 모드 15W 계열과 CPU 코어 수에 따른 차이.
 - MVTec AD의 라이선스는 CC BY-NC-SA 4.0이며 비상업 용도로만 씀.

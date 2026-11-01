@@ -192,3 +192,87 @@ max power mode, power. The shared pin_layers failure was worked around in `build
 P0 engine: `~/e2e/engines/p0_gpu_mixed_name.engine` is a copy of the earlier `~/trt_run/mixed_name.engine` (27.5 MB, built 220 s, no post). Loading it prints the TensorRT warning
 "Using an engine plan file across different models of devices is not recommended"; the three engines built here do not print it in the acc runs (cause not investigated; P0 numbers are from that engine as is).
 Run: `sh ~/e2e/run_suite.sh <TAG>` (results in `~/e2e/results/<TAG>/`: one .log/.json per config, micro.json, suite.log; optional REPS=3, DURATION, WARMUP, config-name filter after TAG).
+
+
+## Stage-split pipelines P4 / P5 (DLA backbone without post) - added 2026-11-01, 10W functional run, NOT final
+Idea: keep the post graph out of the DLA engine (in P3 it falls back to the GPU and the 33-tap blur exceeds the DLA limit) and run the post separately.
+Code: `board\bench_e2e.py` (new pipes P4/P5, `--post-engine`, `--p5-link device|host`, `--mode check`, worker spec `label=ENGINE[@PIPE]`; P0..P3 code paths unchanged,
+re-run after the edit: P0 / P1 / P3 start and run), `board\run_suite_split.sh` (root-free, no `~`), `pc\build_post_only.py` (builds + checks the post-only ONNX), `pc\e2e_score.py` (unchanged).
+- P4 = CPU resize (INTER_AREA from 900) + DLA engine `int8mix_dla0.engine` (m, xproj; copied to `~/e2e/engines/`) + CPU numpy/cv2 post (the P0 code).
+- P5 = same front end + DLA engine + GPU post-only engine `~/e2e/engines/p5_gpu_post_only.engine`, both on one stream in one worker thread.
+  Link `device` (default): the post engine reads the backbone's output device buffers (no copy). Link `host`: D2H m/xproj, CPU copy, H2D (two-process style).
+- Post-only ONNX `out\bottle_post_only.onnx` (1.8 kB, opset 12; `graph_opt.add_post(mode="conv")` on a dummy m/xproj graph): inputs m [1,1,32,32], xproj [1,384,32,32] fp32,
+  outputs score_max [1], score_top10 [1], map [1,1,256,256]. ORT vs `graph_opt.host_post` (float64 + scipy), 83 frames of the fp32 dumps: max |diff| score_max 2.3e-5, top10 1.2e-5,
+  map 2.9e-4 (map range 2.9..77), `out\e2e_split_post_only_check.json`. Engine: pure fp32 (no int8/fp16 anywhere, so ||x||^2 - m is fp32), 30 kB, built in 22 s.
+  trtexec on the board (10W): GPU compute 0.64 ms mean (0.62 with CUDA Graph), H2D 0.16 ms, D2H 0.04 ms, 1558 qps. TRT engine vs host_post on the DLA engine's own outputs (83 frames, both links):
+  max |diff| score_max 7.6e-6, top10 1.5e-5, map 3.8e-5.
+- Raw DLA engine in trtexec at 10W: 19.1 ms/core (52 qps). The 73 FPS/core quoted for max mode is NOT reproducible in 10W; the DLA runs slower in this mode (cause: power mode clocks, not measured).
+
+10W functional run (15 s measured after 5 s warm-up, non-blocking streams; `out\e2e_split_functional_10W.json`, `out\e2e_split_func_10W\`). P3 column = the earlier 20 s 10W run above.
+  worker set            P3 (post in engine)   P4 (CPU post)  p50/p99 ms   CPU%   P5 device link  p50/p99 ms   CPU%   P5 host link
+  dla0                  33.4                  30.5           32.8/34.5    12     28.6            35.3/37.6    15     32.0 (3 more runs: 29.0, 30.2, 29.4)
+  dla1                  29.9                  30.6           32.7/34.4    12     29.0            34.6/36.7    15     -
+  dla0+dla1             55.8                  61.0           32.5/36.8    22     57.1            34.7/35.9    19     60.6
+  gpu(P1)+dla0+dla1     67.1                  106.6          27.8/30.9    32     67.0            44.7/45.4    22     -
+  INTER_LINEAR dla0+dla1 58.7                 83.4           23.6/27.4    18     58.6            34.1/34.3     7     -
+  P5 device link, 3 repeats of dla0: 29.95 / 29.36 / 29.09 FPS; host link: 28.96 / 30.16 / 29.36. No measurable difference; device link needs no copies and is the default.
+  Stage means (ms/frame, P4 dla0): resize 9.2, uint8->fp32 0.12, H2D+DLA exec+D2H 20.8, host post 2.6. P5 device: resize 10.5, engine phase (backbone + post engine) 24.1.
+  P5 host link: backbone incl. its D2H 18.8-20.8, copies + post engine about 2.4-3.6.
+Accuracy, 83 frames at 900x900, dla0 engine (`out\e2e_split_accuracy.json`; fp32 reference 1.0000 / 1.0000 / 0.9848 / 0.9430):
+                        img AUROC (max, top10)  pixel AUROC  AUPRO
+  P3 dla0 AREA          1.0000, 1.0000          0.9846       0.9428
+  P4 dla0 AREA          1.0000, 1.0000          0.9846       0.9428
+  P5 dla0 AREA          1.0000, 1.0000          0.9846       0.9428
+  P4 dla0 LINEAR        1.0000, 1.0000          0.9831       0.9398
+  P5 dla0 LINEAR        1.0000, 1.0000          0.9831       0.9398
+  P4 and P5 maps differ by 4e-5 at most from each other, so the split does not change accuracy; the DLA backbone is the same engine as before.
+Findings: (1) In 10W mode the split does NOT help: the DLA backbone alone takes ~19-21 ms per frame, so one worker is DLA-bound (and resize-bound) and P3's in-engine post cost only
+~1 ms there. P4 dla0 30.5 vs P3 33.4 FPS, P4 dla0+dla1 61.0 vs 55.8 (+9%, within the run-to-run spread seen for P3). P5 is not faster than P4: the GPU post saves the 2.6 ms CPU post but the
+extra engine phase costs about as much. (2) The mixed gpu+dla0+dla1 numbers (106.6 vs 67.0 vs 67.1) are the known 10W plateau lottery (see P3 note above), not a P4/P5 effect.
+(3) Whether the split pays off in max mode (where P3 reached only 42.6 FPS/core against 73 in trtexec) is NOT measured here; run the suite below. (4) INTER_LINEAR P4 dla0+dla1 reaches 83 FPS because the resize drops 9 -> 1 ms.
+Limits: P4/P5 timings use one run per config (15 s) except the link comparison; the accuracy runs use the dla0 engine on core 0 only; the post-only engine was not built with int8 (not needed, 0.64 ms).
+`bench_e2e.py --mode check` compares the post engine with host_post on the DLA outputs; PostRunner in bench_e2e.py is needed because trt_runner.TrtRunner accepts only one input binding.
+Final run (as root, max mode): `export HOME=/home/<user>; REPS=3 sh /home/<user>/e2e/run_suite_split.sh max_split` (results in `~/e2e/results/max_split/`; DURATION=20 default; config names as filter, e.g. `... max_split P4_dla0_dla1`).
+
+## Pipelined (stage-decoupled) mode - added 2026-11-01, 10W functional run, NOT final
+Idea: the accelerator threads (GPU, DLA0, DLA1) only do H2D + execute + D2H. Resize (and for P4 optionally the CPU post) run on separate CPU threads, so the DLA no longer idles during the resize.
+Code: `board\bench_e2e.py --pipelined` (default off; sequential modes P0..P5 unchanged, the SEQ_ runs below use them), `board\run_suite_pipelined.sh` (root-free, no `~`), `pc\e2e_pipe_acc.ps1`.
+- Flow: R feeder threads (`--resize-threads`, default 2) take a free pinned buffer, read a frame from the in-RAM list, cv2.resize (INTER_AREA/LINEAR) and write float32 NHWC straight into the pinned buffer
+  (P2: only the uint8 -> fp32 copy of the 900x900 frame) -> one shared bounded ready queue (`--queue-depth`, default 4) -> accelerator threads (one engine/context/non-blocking stream each; H2D reads the pinned buffer directly,
+  the buffer is returned after the stream sync) -> P4: host_post inline (`--post-threads 0`) or in a post thread pool (`--post-threads N`, bounded queue). Frame ids travel with each item; `--mode acc --pipelined` stores outputs by id.
+- Metrics: fps over the measured window (completions inside it), latency = feeder starts on a frame -> result ready (includes ready-queue wait and back-pressure wait), system CPU %, queue occupancy sampled every 50 ms,
+  fractions of the window the accelerators waited on an empty queue (`accel_wait_frac`), the feeders waited on a full queue (`feeder_put_wait_frac`), the accelerator busy (`accel_busy_frac`), post threads busy; `bottleneck_heuristic` is derived from them.
+  JSON field names are those of the sequential mode (parse_e2e.py works unchanged; verified on `out\e2e_pipe_func_10W`), plus `pipelined` and `queue`.
+- The 4-CPU 10W mode (cpus online 4) limits the CPU side; max mode has 6 cores.
+10W functional results (15 s measured, 5 s warm-up, 1 run each, `out\e2e_pipe_functional_10W.json`, per-run files in `out\e2e_pipe_func_10W\`). SEQ = same session, sequential mode, same engines. Latency p50/p99 at queue depth 4.
+  config                       SEQ FPS (p50 ms)   PIPE FPS   PIPE p50/p99 ms   CPU% (PIPE)   bottleneck
+  P1 gpu                       54.8 (18.1)        91.0       76.7/77.9         24           accelerator (feeders wait on full queue)
+  P1 gpu+gpu2                  95.4 (20.9)        95.4       83.6/83.9         25           accelerator (GPU)
+  P2 gpu                       58.9 (17.0)        61.8       113/114           8            accelerator
+  P2 gpu+gpu2                  65.9 (30.2)        65.8       121/122           9            accelerator
+  P4 dla0                      30.1 (32.6)        45.6       151/217           21           accelerator (DLA exec 19.1 ms)
+  P4 dla0+dla1                 65.9 (29.9)        87.5       88/207            41           accelerator
+  P4 dla0+dla1, post pool 2    68.3 (28.4)        101.8      78/210            42           accelerator (DLA exec 19.1 ms/core -> 51 FPS/core)
+  mixed gpu(P1)+dla0+dla1      105.8 (27.8)       106.4      84/122            39           accelerators (35 FPS each, GPU-side contention)
+  mixed, post pool 2           102.1 (28.6)       105.2      87/157            42           accelerators
+  INTER_LINEAR P1 gpu+gpu2     94.7               94.1       84/140            17
+  INTER_LINEAR P4 dla0+dla1 pool 2   82.5         97.2       83/166            28
+  INTER_LINEAR mixed pool 2    106.5              105.5      89/187            28
+In all 13 pipelined configs the accelerators were never starved (accel_wait_frac <= 0.01, ready queue full), so the feeders (resize 7.4-8.8 ms per frame, 2 threads) kept up in 10W.
+Queue depth vs latency (P1 gpu / P4 dla0 / P4 dla0+dla1 pool 2 / mixed pool 2): depth 1: 91.2 FPS p50 44 ms / 48.8 FPS 82 ms / 105.5 FPS 50 ms / 107.0 FPS 58 ms;
+depth 2: 91.2 / 54.6 ms, 46.4 / 107.5, 100.3 / 61.3, 106.8 / 65.3 (depth 4 above). Throughput does not depend on the depth in these runs, latency does (back-pressure: a saturated pipeline holds about 4-7 frames).
+Accuracy (83 frames at 900x900, `out\e2e_pipe_accuracy.json`; fp32 reference 1.0000 / 0.9848 / 0.9430), outputs also compared bit for bit with the sequential npz files:
+  pipelined config                    img AUROC (max, top10)   pixel AUROC   AUPRO   vs sequential npz
+  P4 dla0 AREA                        1.0000, 1.0000           0.9846        0.9428  max |map diff| 0.0 (vs split_P4_dla0_area)
+  P4 dla0 LINEAR                      1.0000, 1.0000           0.9831        0.9398  0.0
+  P4 dla0+dla1, pool 2, AREA          1.0000, 1.0000           0.9846        0.9428  0.0 (frames spread over both cores, ids mapped correctly)
+  P1 gpu AREA                         1.0000, 1.0000           0.9845        0.9428  0.0 (vs P1_area)
+  P1 gpu+gpu2 AREA                    1.0000, 1.0000           0.9845        0.9428  0.0 (identical to P1 gpu)
+Findings: (1) Pipelining helps where a single sequential thread leaves the accelerator idle: P1 one GPU worker +66%, P4 dla0 +51%, P4 dla0+dla1 +33% (+49% with the post pool). (2) It does not help where the sequential run already
+saturated the device: P1 gpu+gpu2, P2, and the mixed gpu+dla0+dla1 set (106 FPS both ways in this session; per-worker 35 FPS with an accelerator time of 28 ms vs 10.8 ms for the GPU engine alone, i.e. the three workers slow each other down;
+the cause is not measured). (3) The post pool adds about +16% for dla0+dla1 (87.5 -> 101.8) and nothing for dla0 alone or the mixed set. (4) Per-frame latency under saturation is 2.7-6.6x the sequential latency (queue wait).
+(5) P4 dla0+dla1 pipelined reaches 51 FPS per core = 1 / 19.1 ms, the trtexec DLA rate of this 10W mode, so there is no head room left for the pipeline on the DLA at 10W.
+Limits and notes: GIL contention was not isolated (process CPU was 1.25 cores for the mixed set, accelerator threads never starved); no per-worker queues (one shared queue, so a slow DLA worker cannot block a fast GPU worker);
+pinned buffers: depth + workers + R x 0.79 MB (9.7 MB each for P2); P2 cannot be mixed with P1/P4 workers in one run (one buffer pool); ≤ 2 DLA contexts as before; latency is back-pressure dominated when saturated (see depth runs);
+all numbers are single 15 s runs at 10W; the max-mode numbers are NOT measured.
+Final run (as root, max mode): `export HOME=/home/<user>; REPS=3 SEQ=1 sh /home/<user>/e2e/run_suite_pipelined.sh max_pipe` (results in `~/e2e/results/max_pipe/`; DURATION=20 default; env RT=resize threads, QD=queue depth; config names as filter, e.g. `... max_pipe PIPE_P4_dla0_dla1_pt2`; SEQ=1 adds the sequential counterparts `SEQ_*`). Aggregate with `python parse_e2e.py <dir>`.

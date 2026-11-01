@@ -47,7 +47,7 @@ def main():
         if os.path.basename(f) == "micro.json":
             continue
         j = json.load(open(f, encoding="utf-8"))
-        if j.get("status") != "OK":
+        if j.get("status") != "OK" or "fps" not in j:  # skip check-mode outputs such as post_engine_check.json
             continue
         name = j["config"]
         base = re.sub(r"_r\d+$", "", name)

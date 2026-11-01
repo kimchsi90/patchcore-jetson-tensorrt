@@ -1,0 +1,6120 @@
+{
+ "label": "10W, not final",
+ "queue_depth_4_with_SEQ": {
+  "PIPE_P1_gpu": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 4,
+    "buffers": 7,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P1_gpu",
+   "pipe": "P1",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.035,
+   "frames_done": 1368,
+   "fps": 90.99,
+   "per_worker_fps": [
+    90.99
+   ],
+   "latency_ms": {
+    "p50": 76.74,
+    "p99": 77.88,
+    "mean": 76.74
+   },
+   "per_worker_latency_ms_p50": [
+    76.74
+   ],
+   "cpu_util_system_pct": 23.6,
+   "cpu_process_cores_busy": 0.86,
+   "queue": {
+    "ready_mean": 3.99,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 98.7,
+    "free_buffers_mean": 0.01,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.004,
+    "accel_busy_frac": 0.988,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.345,
+    "feeder_put_wait_frac": 0.654,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 58.22,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 7.448,
+    "feeder_u8_to_f32_copy": 0.134,
+    "accel_h2d_exec_d2h": [
+     10.854
+    ],
+    "post": 0.0
+   },
+   "temp_peak_mc": 47500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P1_gpu_gpu2": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "gpu2",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 4,
+    "buffers": 8,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P1_gpu_gpu2",
+   "pipe": "P1",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "gpu2",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.036,
+   "frames_done": 1435,
+   "fps": 95.44,
+   "per_worker_fps": [
+    47.69,
+    47.75
+   ],
+   "latency_ms": {
+    "p50": 83.63,
+    "p99": 83.87,
+    "mean": 83.63
+   },
+   "per_worker_latency_ms_p50": [
+    83.63,
+    83.63
+   ],
+   "cpu_util_system_pct": 24.8,
+   "cpu_process_cores_busy": 0.91,
+   "queue": {
+    "ready_mean": 3.97,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 97.3,
+    "free_buffers_mean": 0.03,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.002,
+    "accel_busy_frac": 0.994,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.36,
+    "feeder_put_wait_frac": 0.639,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 55.19,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 7.406,
+    "feeder_u8_to_f32_copy": 0.13,
+    "accel_h2d_exec_d2h": [
+     20.825,
+     20.822
+    ],
+    "post": 0.0
+   },
+   "temp_peak_mc": 48000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P1_gpu_gpu2_linear": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "gpu2",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 4,
+    "buffers": 8,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P1_gpu_gpu2_linear",
+   "pipe": "P1",
+   "interp": "linear",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "gpu2",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44500,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.036,
+   "frames_done": 1415,
+   "fps": 94.1,
+   "per_worker_fps": [
+    47.09,
+    47.02
+   ],
+   "latency_ms": {
+    "p50": 83.76,
+    "p99": 140.29,
+    "mean": 84.71
+   },
+   "per_worker_latency_ms_p50": [
+    83.76,
+    83.76
+   ],
+   "cpu_util_system_pct": 17.3,
+   "cpu_process_cores_busy": 0.34,
+   "queue": {
+    "ready_mean": 3.97,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 97.0,
+    "free_buffers_mean": 0.03,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.003,
+    "accel_busy_frac": 0.991,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.058,
+    "feeder_put_wait_frac": 0.941,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 62.3,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 1.055,
+    "feeder_u8_to_f32_copy": 0.171,
+    "accel_h2d_exec_d2h": [
+     21.076,
+     21.065
+    ],
+    "post": 0.0
+   },
+   "temp_peak_mc": 47500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P2_gpu": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "uint8->fp32 copy": "CPU",
+      "H2D 9.7MB": "copy engine",
+      "resize 900->256 (2 MatMul)": "GPU",
+      "backbone+head": "GPU",
+      "post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 4,
+    "buffers": 7,
+    "buffer_bytes": 9720000,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P2_gpu",
+   "pipe": "P2",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p2_gpu_full900.engine",
+     "dla_core": null,
+     "in": [
+      "image_full_nhwc",
+      [
+       1,
+       900,
+       900,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.042,
+   "frames_done": 930,
+   "fps": 61.83,
+   "per_worker_fps": [
+    61.83
+   ],
+   "latency_ms": {
+    "p50": 113.03,
+    "p99": 113.96,
+    "mean": 113.03
+   },
+   "per_worker_latency_ms_p50": [
+    113.03
+   ],
+   "cpu_util_system_pct": 7.9,
+   "cpu_process_cores_busy": 0.2,
+   "queue": {
+    "ready_mean": 3.99,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 99.3,
+    "free_buffers_mean": 0.01,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.003,
+    "accel_busy_frac": 0.99,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.031,
+    "feeder_put_wait_frac": 0.968,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 95.91,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 0.0,
+    "feeder_u8_to_f32_copy": 1.003,
+    "accel_h2d_exec_d2h": [
+     16.021
+    ],
+    "post": 0.0
+   },
+   "temp_peak_mc": 47000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1574,
+     1574,
+     1574,
+     1574
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P2_gpu_gpu2": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "uint8->fp32 copy": "CPU",
+      "H2D 9.7MB": "copy engine",
+      "resize 900->256 (2 MatMul)": "GPU",
+      "backbone+head": "GPU",
+      "post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "gpu2",
+     "stages": {
+      "uint8->fp32 copy": "CPU",
+      "H2D 9.7MB": "copy engine",
+      "resize 900->256 (2 MatMul)": "GPU",
+      "backbone+head": "GPU",
+      "post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 4,
+    "buffers": 8,
+    "buffer_bytes": 9720000,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P2_gpu_gpu2",
+   "pipe": "P2",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p2_gpu_full900.engine",
+     "dla_core": null,
+     "in": [
+      "image_full_nhwc",
+      [
+       1,
+       900,
+       900,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "gpu2",
+     "engine": "/home/<user>/e2e/engines/p2_gpu_full900.engine",
+     "dla_core": null,
+     "in": [
+      "image_full_nhwc",
+      [
+       1,
+       900,
+       900,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44500,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.049,
+   "frames_done": 991,
+   "fps": 65.85,
+   "per_worker_fps": [
+    32.89,
+    32.96
+   ],
+   "latency_ms": {
+    "p50": 120.7,
+    "p99": 121.67,
+    "mean": 121.24
+   },
+   "per_worker_latency_ms_p50": [
+    120.7,
+    120.7
+   ],
+   "cpu_util_system_pct": 9.3,
+   "cpu_process_cores_busy": 0.23,
+   "queue": {
+    "ready_mean": 3.99,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 99.0,
+    "free_buffers_mean": 0.01,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.002,
+    "accel_busy_frac": 0.994,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.036,
+    "feeder_put_wait_frac": 0.963,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 89.82,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 0.0,
+    "feeder_u8_to_f32_copy": 1.107,
+    "accel_h2d_exec_d2h": [
+     30.227,
+     30.159
+    ],
+    "post": 0.0
+   },
+   "temp_peak_mc": 46500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P4_dla0": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 4,
+    "buffers": 7,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P4_dla0",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.015,
+   "frames_done": 685,
+   "fps": 45.62,
+   "per_worker_fps": [
+    45.62
+   ],
+   "latency_ms": {
+    "p50": 151.07,
+    "p99": 217.2,
+    "mean": 153.06
+   },
+   "per_worker_latency_ms_p50": [
+    151.07
+   ],
+   "cpu_util_system_pct": 21.4,
+   "cpu_process_cores_busy": 0.61,
+   "queue": {
+    "ready_mean": 3.99,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 99.3,
+    "free_buffers_mean": 0.11,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.004,
+    "accel_busy_frac": 0.873,
+    "accel_inline_post_frac": 0.118,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.205,
+    "feeder_put_wait_frac": 0.793,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 122.23,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 8.842,
+    "feeder_u8_to_f32_copy": 0.157,
+    "accel_h2d_exec_d2h": [
+     19.128
+    ],
+    "post": 2.597
+   },
+   "temp_peak_mc": 46000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P4_dla0_dla1": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 4,
+    "buffers": 8,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P4_dla0_dla1",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44500,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.011,
+   "frames_done": 1313,
+   "fps": 87.47,
+   "per_worker_fps": [
+    43.7,
+    43.77
+   ],
+   "latency_ms": {
+    "p50": 87.69,
+    "p99": 206.89,
+    "mean": 91.88
+   },
+   "per_worker_latency_ms_p50": [
+    87.7,
+    87.66
+   ],
+   "cpu_util_system_pct": 40.6,
+   "cpu_process_cores_busy": 1.04,
+   "queue": {
+    "ready_mean": 3.98,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 97.6,
+    "free_buffers_mean": 0.29,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.005,
+    "accel_busy_frac": 0.872,
+    "accel_inline_post_frac": 0.12,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.349,
+    "feeder_put_wait_frac": 0.65,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 60.96,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 7.797,
+    "feeder_u8_to_f32_copy": 0.181,
+    "accel_h2d_exec_d2h": [
+     19.921,
+     19.964
+    ],
+    "post": 2.744
+   },
+   "temp_peak_mc": 46000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P4_dla0_dla1_pt2": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 2,
+    "queue_depth": 4,
+    "buffers": 8,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P4_dla0_dla1_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 43500,
+    "GPU-therm": 43500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.036,
+   "frames_done": 1530,
+   "fps": 101.76,
+   "per_worker_fps": [
+    50.75,
+    51.01
+   ],
+   "latency_ms": {
+    "p50": 77.93,
+    "p99": 209.71,
+    "mean": 81.67
+   },
+   "per_worker_latency_ms_p50": [
+    77.98,
+    77.83
+   ],
+   "cpu_util_system_pct": 42.3,
+   "cpu_process_cores_busy": 1.24,
+   "queue": {
+    "ready_mean": 3.96,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 95.6,
+    "free_buffers_mean": 0.07,
+    "post_mean": 0.04,
+    "post_full_pct": 0.0,
+    "accel_wait_frac": 0.002,
+    "accel_busy_frac": 0.972,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": 0.005,
+    "feeder_busy_frac": 0.4,
+    "feeder_put_wait_frac": 0.598,
+    "post_thread_busy_frac": 0.161,
+    "post_thread_wait_frac": 0.838,
+    "ready_wait_ms_mean": 50.58,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 7.637,
+    "feeder_u8_to_f32_copy": 0.227,
+    "accel_h2d_exec_d2h": [
+     19.151,
+     19.069
+    ],
+    "post": 3.167
+   },
+   "temp_peak_mc": 46000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 306,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P4_dla0_dla1_pt2_linear": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 2,
+    "queue_depth": 4,
+    "buffers": 8,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P4_dla0_dla1_pt2_linear",
+   "pipe": "P4",
+   "interp": "linear",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.048,
+   "frames_done": 1463,
+   "fps": 97.22,
+   "per_worker_fps": [
+    48.71,
+    48.51
+   ],
+   "latency_ms": {
+    "p50": 82.92,
+    "p99": 166.27,
+    "mean": 86.02
+   },
+   "per_worker_latency_ms_p50": [
+    83.11,
+    82.77
+   ],
+   "cpu_util_system_pct": 28.2,
+   "cpu_process_cores_busy": 0.72,
+   "queue": {
+    "ready_mean": 3.96,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 96.3,
+    "free_buffers_mean": 0.1,
+    "post_mean": 0.05,
+    "post_full_pct": 0.0,
+    "accel_wait_frac": 0.004,
+    "accel_busy_frac": 0.969,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": 0.005,
+    "feeder_busy_frac": 0.093,
+    "feeder_put_wait_frac": 0.905,
+    "post_thread_busy_frac": 0.187,
+    "post_thread_wait_frac": 0.812,
+    "ready_wait_ms_mean": 59.29,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 1.54,
+    "feeder_u8_to_f32_copy": 0.381,
+    "accel_h2d_exec_d2h": [
+     19.9,
+     19.957
+    ],
+    "post": 3.853
+   },
+   "temp_peak_mc": 45500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P4_dla0_pt2": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 2,
+    "queue_depth": 4,
+    "buffers": 7,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P4_dla0_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 43000,
+    "GPU-therm": 43000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.011,
+   "frames_done": 675,
+   "fps": 44.97,
+   "per_worker_fps": [
+    44.97
+   ],
+   "latency_ms": {
+    "p50": 156.44,
+    "p99": 264.68,
+    "mean": 158.9
+   },
+   "per_worker_latency_ms_p50": [
+    156.44
+   ],
+   "cpu_util_system_pct": 23.2,
+   "cpu_process_cores_busy": 0.67,
+   "queue": {
+    "ready_mean": 3.98,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 98.0,
+    "free_buffers_mean": 0.05,
+    "post_mean": 0.0,
+    "post_full_pct": 0.0,
+    "accel_wait_frac": 0.002,
+    "accel_busy_frac": 0.971,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": 0.005,
+    "feeder_busy_frac": 0.21,
+    "feeder_put_wait_frac": 0.788,
+    "post_thread_busy_frac": 0.073,
+    "post_thread_wait_frac": 0.926,
+    "ready_wait_ms_mean": 123.77,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 9.202,
+    "feeder_u8_to_f32_copy": 0.169,
+    "accel_h2d_exec_d2h": [
+     21.615
+    ],
+    "post": 3.259
+   },
+   "temp_peak_mc": 43500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_mix": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 4,
+    "buffers": 9,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_mix",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44500,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.043,
+   "frames_done": 1600,
+   "fps": 106.36,
+   "per_worker_fps": [
+    37.76,
+    34.24,
+    34.37
+   ],
+   "latency_ms": {
+    "p50": 83.68,
+    "p99": 122.29,
+    "mean": 83.94
+   },
+   "per_worker_latency_ms_p50": [
+    83.66,
+    83.71,
+    83.68
+   ],
+   "cpu_util_system_pct": 38.9,
+   "cpu_process_cores_busy": 1.17,
+   "queue": {
+    "ready_mean": 3.94,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 94.3,
+    "free_buffers_mean": 0.29,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.002,
+    "accel_busy_frac": 0.917,
+    "accel_inline_post_frac": 0.076,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.406,
+    "feeder_put_wait_frac": 0.592,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 48.18,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 7.415,
+    "feeder_u8_to_f32_copy": 0.205,
+    "accel_h2d_exec_d2h": [
+     26.272,
+     25.623,
+     25.663
+    ],
+    "post": 2.156
+   },
+   "temp_peak_mc": 47000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_mix_pt2": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 2,
+    "queue_depth": 4,
+    "buffers": 9,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_mix_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44000,
+    "GPU-therm": 44000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.003,
+   "frames_done": 1579,
+   "fps": 105.24,
+   "per_worker_fps": [
+    35.46,
+    34.93,
+    34.86
+   ],
+   "latency_ms": {
+    "p50": 87.34,
+    "p99": 156.57,
+    "mean": 87.61
+   },
+   "per_worker_latency_ms_p50": [
+    84.2,
+    88.01,
+    88.26
+   ],
+   "cpu_util_system_pct": 42.0,
+   "cpu_process_cores_busy": 1.25,
+   "queue": {
+    "ready_mean": 3.89,
+    "ready_empty_pct": 0.3,
+    "ready_full_pct": 91.5,
+    "free_buffers_mean": 0.17,
+    "post_mean": 0.05,
+    "post_full_pct": 0.0,
+    "accel_wait_frac": 0.002,
+    "accel_busy_frac": 0.975,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": 0.003,
+    "feeder_busy_frac": 0.429,
+    "feeder_put_wait_frac": 0.568,
+    "post_thread_busy_frac": 0.144,
+    "post_thread_wait_frac": 0.856,
+    "ready_wait_ms_mean": 47.57,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 7.919,
+    "feeder_u8_to_f32_copy": 0.239,
+    "accel_h2d_exec_d2h": [
+     27.986,
+     27.605,
+     27.822
+    ],
+    "post": 2.739
+   },
+   "temp_peak_mc": 46500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_mix_pt2_linear": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 2,
+    "queue_depth": 4,
+    "buffers": 9,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_mix_pt2_linear",
+   "pipe": "P4",
+   "interp": "linear",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 43000,
+    "GPU-therm": 43000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.036,
+   "frames_done": 1587,
+   "fps": 105.54,
+   "per_worker_fps": [
+    35.31,
+    35.18,
+    35.05
+   ],
+   "latency_ms": {
+    "p50": 88.58,
+    "p99": 186.78,
+    "mean": 88.7
+   },
+   "per_worker_latency_ms_p50": [
+    83.88,
+    89.22,
+    89.38
+   ],
+   "cpu_util_system_pct": 27.7,
+   "cpu_process_cores_busy": 0.71,
+   "queue": {
+    "ready_mean": 3.93,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 94.6,
+    "free_buffers_mean": 0.12,
+    "post_mean": 0.08,
+    "post_full_pct": 0.0,
+    "accel_wait_frac": 0.002,
+    "accel_busy_frac": 0.98,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": 0.002,
+    "feeder_busy_frac": 0.107,
+    "feeder_put_wait_frac": 0.89,
+    "post_thread_busy_frac": 0.192,
+    "post_thread_wait_frac": 0.807,
+    "ready_wait_ms_mean": 54.0,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 1.576,
+    "feeder_u8_to_f32_copy": 0.46,
+    "accel_h2d_exec_d2h": [
+     28.19,
+     27.558,
+     27.834
+    ],
+    "post": 3.634
+   },
+   "temp_peak_mc": 44000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P1_gpu": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P1_gpu",
+   "pipe": "P1",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.053,
+   "frames_done": 825,
+   "fps": 54.81,
+   "per_worker_fps": [
+    54.81
+   ],
+   "latency_ms": {
+    "p50": 18.13,
+    "p99": 19.77,
+    "mean": 18.24
+   },
+   "per_worker_latency_ms_p50": [
+    18.13
+   ],
+   "cpu_util_system_pct": 13.4,
+   "cpu_process_cores_busy": 0.48,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.112,
+     "enq": 1.506,
+     "gpu": 11.189,
+     "post": 0.021,
+     "pre": 6.902
+    }
+   ],
+   "temp_peak_mc": 47000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P1_gpu_gpu2": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "gpu2",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P1_gpu_gpu2",
+   "pipe": "P1",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "gpu2",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.051,
+   "frames_done": 1436,
+   "fps": 95.41,
+   "per_worker_fps": [
+    47.71,
+    47.71
+   ],
+   "latency_ms": {
+    "p50": 20.95,
+    "p99": 21.1,
+    "mean": 20.95
+   },
+   "per_worker_latency_ms_p50": [
+    20.95,
+    20.95
+   ],
+   "cpu_util_system_pct": 24.0,
+   "cpu_process_cores_busy": 0.82,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.109,
+     "enq": 1.472,
+     "gpu": 14.132,
+     "post": 0.024,
+     "pre": 6.668
+    },
+    {
+     "copyin": 0.114,
+     "enq": 1.46,
+     "gpu": 13.751,
+     "post": 0.023,
+     "pre": 7.043
+    }
+   ],
+   "temp_peak_mc": 47500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P1_gpu_gpu2_linear": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "gpu2",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P1_gpu_gpu2_linear",
+   "pipe": "P1",
+   "interp": "linear",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "gpu2",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.066,
+   "frames_done": 1427,
+   "fps": 94.71,
+   "per_worker_fps": [
+    47.32,
+    47.39
+   ],
+   "latency_ms": {
+    "p50": 20.96,
+    "p99": 21.39,
+    "mean": 21.1
+   },
+   "per_worker_latency_ms_p50": [
+    20.96,
+    20.96
+   ],
+   "cpu_util_system_pct": 12.3,
+   "cpu_process_cores_busy": 0.26,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.107,
+     "enq": 1.524,
+     "gpu": 20.063,
+     "post": 0.028,
+     "pre": 0.889
+    },
+    {
+     "copyin": 0.115,
+     "enq": 1.509,
+     "gpu": 20.072,
+     "post": 0.024,
+     "pre": 0.861
+    }
+   ],
+   "temp_peak_mc": 47500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P2_gpu": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "uint8->fp32 copy": "CPU",
+      "H2D 9.7MB": "copy engine",
+      "resize 900->256 (2 MatMul)": "GPU",
+      "backbone+head": "GPU",
+      "post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P2_gpu",
+   "pipe": "P2",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p2_gpu_full900.engine",
+     "dla_core": null,
+     "in": [
+      "image_full_nhwc",
+      [
+       1,
+       900,
+       900,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44500,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.056,
+   "frames_done": 887,
+   "fps": 58.91,
+   "per_worker_fps": [
+    58.91
+   ],
+   "latency_ms": {
+    "p50": 16.98,
+    "p99": 17.19,
+    "mean": 16.98
+   },
+   "per_worker_latency_ms_p50": [
+    16.98
+   ],
+   "cpu_util_system_pct": 5.6,
+   "cpu_process_cores_busy": 0.15,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.944,
+     "enq": 1.34,
+     "gpu": 15.997,
+     "post": 0.023,
+     "pre": 0.001
+    }
+   ],
+   "temp_peak_mc": 47000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P2_gpu_gpu2": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "uint8->fp32 copy": "CPU",
+      "H2D 9.7MB": "copy engine",
+      "resize 900->256 (2 MatMul)": "GPU",
+      "backbone+head": "GPU",
+      "post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "gpu2",
+     "stages": {
+      "uint8->fp32 copy": "CPU",
+      "H2D 9.7MB": "copy engine",
+      "resize 900->256 (2 MatMul)": "GPU",
+      "backbone+head": "GPU",
+      "post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P2_gpu_gpu2",
+   "pipe": "P2",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p2_gpu_full900.engine",
+     "dla_core": null,
+     "in": [
+      "image_full_nhwc",
+      [
+       1,
+       900,
+       900,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "gpu2",
+     "engine": "/home/<user>/e2e/engines/p2_gpu_full900.engine",
+     "dla_core": null,
+     "in": [
+      "image_full_nhwc",
+      [
+       1,
+       900,
+       900,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44000,
+    "GPU-therm": 44000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.059,
+   "frames_done": 992,
+   "fps": 65.87,
+   "per_worker_fps": [
+    32.94,
+    32.94
+   ],
+   "latency_ms": {
+    "p50": 30.19,
+    "p99": 31.3,
+    "mean": 30.38
+   },
+   "per_worker_latency_ms_p50": [
+    30.19,
+    30.18
+   ],
+   "cpu_util_system_pct": 10.4,
+   "cpu_process_cores_busy": 0.2,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 1.015,
+     "enq": 1.714,
+     "gpu": 29.307,
+     "post": 0.029,
+     "pre": 0.001
+    },
+    {
+     "copyin": 1.029,
+     "enq": 1.737,
+     "gpu": 29.298,
+     "post": 0.028,
+     "pre": 0.001
+    }
+   ],
+   "temp_peak_mc": 46000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P4_dla0": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P4_dla0",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45500,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.058,
+   "frames_done": 454,
+   "fps": 30.15,
+   "per_worker_fps": [
+    30.15
+   ],
+   "latency_ms": {
+    "p50": 32.56,
+    "p99": 40.55,
+    "mean": 33.13
+   },
+   "per_worker_latency_ms_p50": [
+    32.56
+   ],
+   "cpu_util_system_pct": 18.3,
+   "cpu_process_cores_busy": 0.4,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.138,
+     "enq": 1.213,
+     "gpu": 21.04,
+     "post": 2.919,
+     "pre": 9.002
+    }
+   ],
+   "temp_peak_mc": 45500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P4_dla0_dla1": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P4_dla0_dla1",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.061,
+   "frames_done": 993,
+   "fps": 65.93,
+   "per_worker_fps": [
+    32.93,
+    33.0
+   ],
+   "latency_ms": {
+    "p50": 29.87,
+    "p99": 33.2,
+    "mean": 30.33
+   },
+   "per_worker_latency_ms_p50": [
+    29.88,
+    29.87
+   ],
+   "cpu_util_system_pct": 25.9,
+   "cpu_process_cores_busy": 0.79,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.156,
+     "enq": 1.178,
+     "gpu": 19.328,
+     "post": 2.78,
+     "pre": 8.06
+    },
+    {
+     "copyin": 0.157,
+     "enq": 1.252,
+     "gpu": 19.53,
+     "post": 2.588,
+     "pre": 7.998
+    }
+   ],
+   "temp_peak_mc": 45500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P4_dla0_dla1_pt2": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P4_dla0_dla1_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 306,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 45500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.057,
+   "frames_done": 1029,
+   "fps": 68.34,
+   "per_worker_fps": [
+    34.14,
+    34.2
+   ],
+   "latency_ms": {
+    "p50": 28.42,
+    "p99": 40.9,
+    "mean": 29.27
+   },
+   "per_worker_latency_ms_p50": [
+    28.42,
+    28.42
+   ],
+   "cpu_util_system_pct": 27.8,
+   "cpu_process_cores_busy": 0.79,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.14,
+     "enq": 1.182,
+     "gpu": 18.494,
+     "post": 2.744,
+     "pre": 7.882
+    },
+    {
+     "copyin": 0.136,
+     "enq": 1.202,
+     "gpu": 18.365,
+     "post": 2.93,
+     "pre": 7.788
+    }
+   ],
+   "temp_peak_mc": 46500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1420,
+     1420,
+     1420,
+     1420
+    ],
+    "gpu_mhz_now": 306,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P4_dla0_dla1_pt2_linear": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P4_dla0_dla1_pt2_linear",
+   "pipe": "P4",
+   "interp": "linear",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44000,
+    "GPU-therm": 44000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.06,
+   "frames_done": 1242,
+   "fps": 82.47,
+   "per_worker_fps": [
+    41.17,
+    41.3
+   ],
+   "latency_ms": {
+    "p50": 23.89,
+    "p99": 29.74,
+    "mean": 24.24
+   },
+   "per_worker_latency_ms_p50": [
+    23.92,
+    23.86
+   ],
+   "cpu_util_system_pct": 18.6,
+   "cpu_process_cores_busy": 0.48,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.146,
+     "enq": 1.307,
+     "gpu": 19.565,
+     "post": 3.449,
+     "pre": 1.108
+    },
+    {
+     "copyin": 0.139,
+     "enq": 1.367,
+     "gpu": 19.609,
+     "post": 3.329,
+     "pre": 1.083
+    }
+   ],
+   "temp_peak_mc": 44500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_P4_dla0_pt2": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_P4_dla0_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 43500,
+    "GPU-therm": 43500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.089,
+   "frames_done": 452,
+   "fps": 29.96,
+   "per_worker_fps": [
+    29.96
+   ],
+   "latency_ms": {
+    "p50": 32.33,
+    "p99": 69.32,
+    "mean": 33.4
+   },
+   "per_worker_latency_ms_p50": [
+    32.33
+   ],
+   "cpu_util_system_pct": 25.2,
+   "cpu_process_cores_busy": 0.4,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.171,
+     "enq": 1.555,
+     "gpu": 21.355,
+     "post": 3.169,
+     "pre": 8.671
+    }
+   ],
+   "temp_peak_mc": 44500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_mix": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_mix",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 45000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.109,
+   "frames_done": 1599,
+   "fps": 105.83,
+   "per_worker_fps": [
+    35.47,
+    35.14,
+    35.21
+   ],
+   "latency_ms": {
+    "p50": 27.75,
+    "p99": 36.32,
+    "mean": 28.37
+   },
+   "per_worker_latency_ms_p50": [
+    27.71,
+    27.85,
+    27.74
+   ],
+   "cpu_util_system_pct": 35.0,
+   "cpu_process_cores_busy": 1.13,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.132,
+     "enq": 1.978,
+     "gpu": 20.452,
+     "post": 0.033,
+     "pre": 7.569
+    },
+    {
+     "copyin": 0.123,
+     "enq": 1.219,
+     "gpu": 18.005,
+     "post": 2.833,
+     "pre": 7.479
+    },
+    {
+     "copyin": 0.145,
+     "enq": 1.308,
+     "gpu": 18.292,
+     "post": 2.415,
+     "pre": 7.546
+    }
+   ],
+   "temp_peak_mc": 46000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_mix_pt2": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_mix_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44500,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.082,
+   "frames_done": 1540,
+   "fps": 102.11,
+   "per_worker_fps": [
+    34.61,
+    33.81,
+    33.68
+   ],
+   "latency_ms": {
+    "p50": 28.64,
+    "p99": 45.27,
+    "mean": 29.38
+   },
+   "per_worker_latency_ms_p50": [
+    28.46,
+    28.69,
+    28.7
+   ],
+   "cpu_util_system_pct": 39.3,
+   "cpu_process_cores_busy": 1.15,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.138,
+     "enq": 2.326,
+     "gpu": 20.964,
+     "post": 0.044,
+     "pre": 7.761
+    },
+    {
+     "copyin": 0.202,
+     "enq": 1.638,
+     "gpu": 18.357,
+     "post": 2.931,
+     "pre": 8.043
+    },
+    {
+     "copyin": 0.152,
+     "enq": 1.564,
+     "gpu": 18.255,
+     "post": 3.339,
+     "pre": 7.903
+    }
+   ],
+   "temp_peak_mc": 46500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "SEQ_PIPE_mix_pt2_linear": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "nb_stream": true,
+   "config": "SEQ_PIPE_mix_pt2_linear",
+   "pipe": "P4",
+   "interp": "linear",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 42500,
+    "GPU-therm": 42500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.065,
+   "frames_done": 1604,
+   "fps": 106.47,
+   "per_worker_fps": [
+    35.71,
+    35.38,
+    35.38
+   ],
+   "latency_ms": {
+    "p50": 27.95,
+    "p99": 31.28,
+    "mean": 28.14
+   },
+   "per_worker_latency_ms_p50": [
+    27.95,
+    27.95,
+    27.96
+   ],
+   "cpu_util_system_pct": 20.3,
+   "cpu_process_cores_busy": 0.55,
+   "stage_ms_mean_per_frame": [
+    {
+     "copyin": 0.179,
+     "enq": 2.122,
+     "gpu": 26.776,
+     "post": 0.03,
+     "pre": 0.954
+    },
+    {
+     "copyin": 0.147,
+     "enq": 1.521,
+     "gpu": 23.104,
+     "post": 3.719,
+     "pre": 1.222
+    },
+    {
+     "copyin": 0.174,
+     "enq": 1.648,
+     "gpu": 23.347,
+     "post": 3.448,
+     "pre": 1.226
+    }
+   ],
+   "temp_peak_mc": 44500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  }
+ },
+ "queue_depth_1": {
+  "PIPE_P1_gpu": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 1,
+    "buffers": 4,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P1_gpu",
+   "pipe": "P1",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 41500,
+    "GPU-therm": 41000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.028,
+   "frames_done": 1370,
+   "fps": 91.17,
+   "per_worker_fps": [
+    91.17
+   ],
+   "latency_ms": {
+    "p50": 43.68,
+    "p99": 44.32,
+    "mean": 43.7
+   },
+   "per_worker_latency_ms_p50": [
+    43.68
+   ],
+   "cpu_util_system_pct": 28.0,
+   "cpu_process_cores_busy": 1.04,
+   "queue": {
+    "ready_mean": 0.99,
+    "ready_empty_pct": 0.7,
+    "ready_full_pct": 99.3,
+    "free_buffers_mean": 0.01,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.004,
+    "accel_busy_frac": 0.989,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.441,
+    "feeder_put_wait_frac": 0.558,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 23.11,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 9.541,
+    "feeder_u8_to_f32_copy": 0.118,
+    "accel_h2d_exec_d2h": [
+     10.85
+    ],
+    "post": 0.0
+   },
+   "temp_peak_mc": 46000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P4_dla0": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 1,
+    "buffers": 4,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P4_dla0",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44000,
+    "GPU-therm": 44000
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.026,
+   "frames_done": 733,
+   "fps": 48.78,
+   "per_worker_fps": [
+    48.78
+   ],
+   "latency_ms": {
+    "p50": 81.59,
+    "p99": 83.73,
+    "mean": 81.67
+   },
+   "per_worker_latency_ms_p50": [
+    81.59
+   ],
+   "cpu_util_system_pct": 19.4,
+   "cpu_process_cores_busy": 0.67,
+   "queue": {
+    "ready_mean": 0.99,
+    "ready_empty_pct": 0.7,
+    "ready_full_pct": 99.3,
+    "free_buffers_mean": 0.12,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.006,
+    "accel_busy_frac": 0.881,
+    "accel_inline_post_frac": 0.109,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.249,
+    "feeder_put_wait_frac": 0.75,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 51.11,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 10.106,
+    "feeder_u8_to_f32_copy": 0.116,
+    "accel_h2d_exec_d2h": [
+     18.059
+    ],
+    "post": 2.234
+   },
+   "temp_peak_mc": 45500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1728,
+     1728,
+     1728,
+     1728
+    ],
+    "gpu_mhz_now": 306,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P4_dla0_dla1_pt2": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 2,
+    "queue_depth": 1,
+    "buffers": 5,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P4_dla0_dla1_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 46000,
+    "GPU-therm": 45500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.047,
+   "frames_done": 1587,
+   "fps": 105.47,
+   "per_worker_fps": [
+    52.77,
+    52.7
+   ],
+   "latency_ms": {
+    "p50": 49.62,
+    "p99": 61.77,
+    "mean": 49.76
+   },
+   "per_worker_latency_ms_p50": [
+    50.34,
+    48.89
+   ],
+   "cpu_util_system_pct": 40.1,
+   "cpu_process_cores_busy": 1.48,
+   "queue": {
+    "ready_mean": 0.97,
+    "ready_empty_pct": 3.3,
+    "ready_full_pct": 96.7,
+    "free_buffers_mean": 0.05,
+    "post_mean": 0.02,
+    "post_full_pct": 0.0,
+    "accel_wait_frac": 0.003,
+    "accel_busy_frac": 0.978,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": 0.004,
+    "feeder_busy_frac": 0.521,
+    "feeder_put_wait_frac": 0.478,
+    "post_thread_busy_frac": 0.133,
+    "post_thread_wait_frac": 0.866,
+    "ready_wait_ms_mean": 18.21,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 9.726,
+    "feeder_u8_to_f32_copy": 0.143,
+    "accel_h2d_exec_d2h": [
+     18.536,
+     18.527
+    ],
+    "post": 2.521
+   },
+   "temp_peak_mc": 46500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 306,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_mix_pt2": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 2,
+    "queue_depth": 1,
+    "buffers": 6,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_mix_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.025,
+   "frames_done": 1608,
+   "fps": 107.02,
+   "per_worker_fps": [
+    35.67,
+    35.67,
+    35.67
+   ],
+   "latency_ms": {
+    "p50": 58.18,
+    "p99": 62.88,
+    "mean": 58.03
+   },
+   "per_worker_latency_ms_p50": [
+    55.79,
+    59.03,
+    59.5
+   ],
+   "cpu_util_system_pct": 39.0,
+   "cpu_process_cores_busy": 1.46,
+   "queue": {
+    "ready_mean": 0.96,
+    "ready_empty_pct": 4.4,
+    "ready_full_pct": 95.6,
+    "free_buffers_mean": 0.08,
+    "post_mean": 0.07,
+    "post_full_pct": 0.0,
+    "accel_wait_frac": 0.012,
+    "accel_busy_frac": 0.971,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": 0.002,
+    "feeder_busy_frac": 0.526,
+    "feeder_put_wait_frac": 0.472,
+    "post_thread_busy_frac": 0.125,
+    "post_thread_wait_frac": 0.874,
+    "ready_wait_ms_mean": 17.64,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 9.698,
+    "feeder_u8_to_f32_copy": 0.142,
+    "accel_h2d_exec_d2h": [
+     27.954,
+     26.676,
+     27.127
+    ],
+    "post": 2.337
+   },
+   "temp_peak_mc": 46500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  }
+ },
+ "queue_depth_2": {
+  "PIPE_P1_gpu": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 2,
+    "buffers": 5,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P1_gpu",
+   "pipe": "P1",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45000,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.031,
+   "frames_done": 1371,
+   "fps": 91.21,
+   "per_worker_fps": [
+    91.21
+   ],
+   "latency_ms": {
+    "p50": 54.58,
+    "p99": 55.97,
+    "mean": 54.65
+   },
+   "per_worker_latency_ms_p50": [
+    54.58
+   ],
+   "cpu_util_system_pct": 28.1,
+   "cpu_process_cores_busy": 1.03,
+   "queue": {
+    "ready_mean": 1.99,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 99.0,
+    "free_buffers_mean": 0.01,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.004,
+    "accel_busy_frac": 0.989,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.438,
+    "feeder_put_wait_frac": 0.561,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 34.14,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 9.482,
+    "feeder_u8_to_f32_copy": 0.115,
+    "accel_h2d_exec_d2h": [
+     10.846
+    ],
+    "post": 0.0
+   },
+   "temp_peak_mc": 48000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1190,
+     1190,
+     1190,
+     1190
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P4_dla0": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 0,
+    "queue_depth": 2,
+    "buffers": 5,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P4_dla0",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 306,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 45500,
+    "GPU-therm": 45500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.037,
+   "frames_done": 697,
+   "fps": 46.35,
+   "per_worker_fps": [
+    46.35
+   ],
+   "latency_ms": {
+    "p50": 107.51,
+    "p99": 109.79,
+    "mean": 107.61
+   },
+   "per_worker_latency_ms_p50": [
+    107.51
+   ],
+   "cpu_util_system_pct": 23.8,
+   "cpu_process_cores_busy": 0.82,
+   "queue": {
+    "ready_mean": 2.0,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 99.7,
+    "free_buffers_mean": 0.1,
+    "post_mean": null,
+    "post_full_pct": null,
+    "accel_wait_frac": 0.004,
+    "accel_busy_frac": 0.88,
+    "accel_inline_post_frac": 0.112,
+    "accel_post_put_wait_frac": null,
+    "feeder_busy_frac": 0.318,
+    "feeder_put_wait_frac": 0.681,
+    "post_thread_busy_frac": null,
+    "post_thread_wait_frac": null,
+    "ready_wait_ms_mean": 72.4,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 13.579,
+    "feeder_u8_to_f32_copy": 0.155,
+    "accel_h2d_exec_d2h": [
+     18.983
+    ],
+    "post": 2.423
+   },
+   "temp_peak_mc": 45500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1651,
+     1651,
+     1651,
+     1651
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_P4_dla0_dla1_pt2": {
+   "placement": [
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 2,
+    "queue_depth": 2,
+    "buffers": 6,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_P4_dla0_dla1_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 43000,
+    "GPU-therm": 43500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.011,
+   "frames_done": 1505,
+   "fps": 100.26,
+   "per_worker_fps": [
+    50.1,
+    50.16
+   ],
+   "latency_ms": {
+    "p50": 61.3,
+    "p99": 84.44,
+    "mean": 62.83
+   },
+   "per_worker_latency_ms_p50": [
+    61.35,
+    61.22
+   ],
+   "cpu_util_system_pct": 40.9,
+   "cpu_process_cores_busy": 1.39,
+   "queue": {
+    "ready_mean": 1.93,
+    "ready_empty_pct": 0.0,
+    "ready_full_pct": 93.3,
+    "free_buffers_mean": 0.09,
+    "post_mean": 0.05,
+    "post_full_pct": 0.0,
+    "accel_wait_frac": 0.002,
+    "accel_busy_frac": 0.978,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": 0.004,
+    "feeder_busy_frac": 0.482,
+    "feeder_put_wait_frac": 0.516,
+    "post_thread_busy_frac": 0.139,
+    "post_thread_wait_frac": 0.86,
+    "ready_wait_ms_mean": 29.94,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 9.479,
+    "feeder_u8_to_f32_copy": 0.147,
+    "accel_h2d_exec_d2h": [
+     19.559,
+     19.493
+    ],
+    "post": 2.773
+   },
+   "temp_peak_mc": 46000,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 204,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  },
+  "PIPE_mix_pt2": {
+   "placement": [
+    {
+     "worker": "gpu",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "pre_transpose+scale operands": "GPU",
+      "pre_sub/pre_div": "GPU",
+      "backbone+projection": "GPU",
+      "head ReduceMax, post (score/top10/upsample/blur)": "GPU"
+     }
+    },
+    {
+     "worker": "dla0",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA0 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    },
+    {
+     "worker": "dla1",
+     "stages": {
+      "resize+uint8->fp32": "CPU",
+      "input scale + backbone + projection (m, xproj)": "DLA1 (+GPU fallback of the input scale, if any)",
+      "score/top10/upsample/blur": "CPU"
+     }
+    }
+   ],
+   "pipelined": {
+    "note": "stage-decoupled: R feeder threads (resize or uint8->fp32 copy) fill pinned host buffers -> one shared bounded ready queue -> accelerator threads (H2D + execute + D2H) -> [P4: optional post thread pool | inline CPU post]",
+    "resize_threads": 2,
+    "post_threads": 2,
+    "queue_depth": 2,
+    "buffers": 7,
+    "buffer_bytes": 786432,
+    "cv_threads": 4,
+    "queue": "shared"
+   },
+   "nb_stream": true,
+   "config": "PIPE_mix_pt2",
+   "pipe": "P4",
+   "interp": "area",
+   "frames": 83,
+   "duration_req_s": 15.0,
+   "warmup_s": 5.0,
+   "workers": [
+    {
+     "label": "gpu",
+     "engine": "/home/<user>/e2e/engines/p1_gpu_post.engine",
+     "dla_core": null,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "score_max",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "score_top10",
+       [
+        1
+       ],
+       "float32"
+      ],
+      [
+       "map",
+       [
+        1,
+        1,
+        256,
+        256
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla0",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 0,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    },
+    {
+     "label": "dla1",
+     "engine": "/home/<user>/e2e/engines/int8mix_dla0.engine",
+     "dla_core": 1,
+     "in": [
+      "image_nhwc",
+      [
+       1,
+       256,
+       256,
+       3
+      ],
+      "float32"
+     ],
+     "out": [
+      [
+       "xproj",
+       [
+        1,
+        384,
+        32,
+        32
+       ],
+       "float32"
+      ],
+      [
+       "m",
+       [
+        1,
+        1,
+        32,
+        32
+       ],
+       "float32"
+      ]
+     ]
+    }
+   ],
+   "sysinfo_start": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 114,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   },
+   "temp_start_mc": {
+    "CPU-therm": 44500,
+    "GPU-therm": 44500
+   },
+   "status": "OK",
+   "errors": [],
+   "measured_wall_s": 15.011,
+   "frames_done": 1604,
+   "fps": 106.85,
+   "per_worker_fps": [
+    35.64,
+    35.57,
+    35.64
+   ],
+   "latency_ms": {
+    "p50": 65.28,
+    "p99": 88.3,
+    "mean": 67.74
+   },
+   "per_worker_latency_ms_p50": [
+    65.27,
+    60.75,
+    77.27
+   ],
+   "cpu_util_system_pct": 36.5,
+   "cpu_process_cores_busy": 1.37,
+   "queue": {
+    "ready_mean": 1.95,
+    "ready_empty_pct": 0.7,
+    "ready_full_pct": 95.3,
+    "free_buffers_mean": 0.1,
+    "post_mean": 0.03,
+    "post_full_pct": 0.0,
+    "accel_wait_frac": 0.001,
+    "accel_busy_frac": 0.982,
+    "accel_inline_post_frac": 0.0,
+    "accel_post_put_wait_frac": 0.002,
+    "feeder_busy_frac": 0.479,
+    "feeder_put_wait_frac": 0.519,
+    "post_thread_busy_frac": 0.122,
+    "post_thread_wait_frac": 0.878,
+    "ready_wait_ms_mean": 27.88,
+    "bottleneck_heuristic": "accelerators: feeders wait on a full ready queue"
+   },
+   "stage_ms_mean_per_frame": {
+    "feeder_resize": 8.84,
+    "feeder_u8_to_f32_copy": 0.132,
+    "accel_h2d_exec_d2h": [
+     27.943,
+     27.386,
+     27.4
+    ],
+    "post": 2.284
+   },
+   "temp_peak_mc": 46500,
+   "sysinfo_end": {
+    "cpus_online": "0-3",
+    "nproc": 4,
+    "cpu_mhz_now": [
+     1907,
+     1907,
+     1907,
+     1907
+    ],
+    "gpu_mhz_now": 510,
+    "l4t": "# R35 (release), REVISION: 6.0, GCID: 37391689, BOARD: t186ref, EABI: aarch64, DATE: Wed Aug 28 09:12:27 UTC 2024"
+   }
+  }
+ }
+}

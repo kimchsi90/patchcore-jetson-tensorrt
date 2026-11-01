@@ -110,3 +110,26 @@ Build log warnings: INT64 weights cast to INT32; "Converted FP32 value in weight
 no memory warnings; "Some tactics do not have sufficient workspace memory" at --workspace 1024. Free RAM during the build dropped to ~100-300 MB (buff/cache 3 GB).
 Separate fp16 finding (head-only engine, 7 images): in fp16 the nearest-neighbor index differs for ~20-25% of patches and patch scores differ by up to ~7 (fp32 engine: 0 / 0.003);
 the image score still passed because the max-patch neighbor matched or was close enough on these data. Not analyzed further.
+
+
+## DLA (Xavier NX, TensorRT 8.5.2, JetPack 5.1.4) - bottle only, hard categories NOT run
+Code: `trt_runner.py build --dla-core N` (default_device_type=DLA, DLA_core=N, GPU_FALLBACK; int8 calibrator and `--fp16-layers` as before),
+`TrtRunner(engine, dla_core)` / `bench --dla-core N` (runtime.DLA_core set before deserialize), `dump_trt.py --dla-core N`.
+Board: `~/trt_dla/` (dla_eval.sh <cat> <fp16|int8mm|int8ent|int8mix> [core]); PC driver `pc\p9_dla.ps1`, summary `p9_dla_summary.csv`,
+build logs and per-layer engine JSON in `out\dla_logs\`, scores `out\dla_bottle_*.json`.
+Board power mode: /var/lib/nvpmodel/status = pmode:0005 (10W desktop, unchanged); `nvpmodel -q` itself fails without root (curr1_crit permission).
+Placement (same for fp16, int8ent, int8mix; see build logs): DLA subgraph 1 = pre_transpose..scale_operand_of_pre_sub (only the NHWC->NCHW transpose);
+GPU = pre_sub/pre_div (PWN; DLA rejects Div and Sub with a [1,3,1,1] operand), then DLA subgraph 2 = whole backbone + projection
+(conv1 ... node_of_dk0, one ForeignNode); GPU = head ReduceMax (node_of_gk0) + output copy. 3 DLA<->GPU transitions per image.
+DLA int8 needs the entropy2 calibrator: `--calib-algo minmax` fails at build ("Network built for DLA requires kENTROPY_CALIBRATION_2", DLA validation failed).
+Per-layer precision pinning (`--fp16-layers`, OBEY_PRECISION_CONSTRAINTS) is accepted on DLA (26 layers pinned, engine builds and runs).
+One engine per core is NOT required: int8mix_dla0.engine deserialized with runtime.DLA_core=1 runs; outputs bit-identical to core 0 (max abs diff 0.0, one random image).
+Bottle (83 test images, fp32 ref 1.0000 / 0.9848 / 0.9430; GPU mixed engine 1 / 0.9849 / 0.943):
+                       img AUROC  pix AUROC  AUPRO   trtexec latency (1 core, 10W)  engine   build
+  DLA fp16             1.0000     0.9848     0.9430  29.72 ms (34.5 qps)            75.5 MB  88-95 s
+  DLA int8 minmax      build fails (see above)
+  DLA int8 entropy2    0.5000     0.7702     0.2958  17.75 ms (55.1 qps)            27.4 MB  262 s    (unusable)
+  DLA int8 mixed       1.0000     0.9850     0.9430  19.92 ms (52.3 qps)            29.3 MB  74 s     (stem+layer1.0+head fp16, entropy2)
+Not measured: screw/wood/toothbrush/tile (the PC driver was stopped by the host for low memory after screw fp16 was built and dumped on the board
+(~/trt_dla/screw/out_fp16_*.npy, not scored)); two-core + GPU concurrent throughput; whether int8mix really executes int8 convs inside the
+DLA ForeignNode (the inspector only shows the ForeignNode; the 29 MB engine size vs 75 MB fp16 suggests int8 weights).

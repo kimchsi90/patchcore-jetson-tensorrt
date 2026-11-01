@@ -37,10 +37,10 @@ class OrtBackend(Backend):
 class TrtBackend(Backend):
     """TensorRT engine through trt_runner.TrtRunner (ctypes CUDA, runs on the Jetson only)."""
 
-    def __init__(self, model: str):
+    def __init__(self, model: str, dla_core=None):
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from trt_runner import TrtRunner
-        self.rn = TrtRunner(model)
+        self.rn = TrtRunner(model, dla_core)
 
     def infer(self, nhwc):
         outs = self.rn.infer(nhwc)
@@ -69,10 +69,11 @@ def main() -> int:
     ap.add_argument("--images", required=True)
     ap.add_argument("--labels", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--dla-core", type=int, default=None, help="trt backend: execute on this DLA core")
     a = ap.parse_args()
 
     names = [r[0] for r in list(csv.reader(open(a.labels)))[1:] if r]
-    be = OrtBackend(a.model) if a.backend == "ort" else TrtBackend(a.model)
+    be = OrtBackend(a.model) if a.backend == "ort" else TrtBackend(a.model, a.dla_core)
     ms, xs = [], []
     for name in names:
         path = os.path.join(a.images, f"{name}.png")

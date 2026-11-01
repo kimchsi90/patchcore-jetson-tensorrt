@@ -6,7 +6,8 @@ Uses only the TensorRT API that exists in both 8.2 and 8.5 (execute_async_v2, ge
 CLI:
   python3 trt_runner.py build --onnx m.onnx --engine m.engine --precision fp16|int8 [--calib-dir D] [--calib-cache C]
          [--calib-algo entropy2|minmax|entropy|legacy] [--fp16-layers SPEC] [--fp32-layers SPEC] [--inspect J.json]
-  python3 trt_runner.py bench --engine m.engine --images DIR [--n 200]
+         [--dla-core N]   (DLA default device + GPU fallback; the engine is tied to that core at build time)
+  python3 trt_runner.py bench --engine m.engine --images DIR [--n 200] [--dla-core N]
 """
 import argparse
 import ctypes
@@ -115,7 +116,7 @@ def _host_array(cuda, nbytes, dtype, shape):
 
 
 class TrtRunner(object):
-    def __init__(self, engine_path):
+    def __init__(self, engine_path, dla_core=None):
         import tensorrt as trt
         self.trt = trt
         if not os.path.isfile(engine_path):
@@ -125,10 +126,12 @@ class TrtRunner(object):
         with open(engine_path, "rb") as f:
             data = f.read()
         self.runtime = trt.Runtime(logger)
+        if dla_core is not None:
+            self.runtime.DLA_core = int(dla_core)  # must be set before deserialize
         self.engine = self.runtime.deserialize_cuda_engine(data)
         if self.engine is None:
-            raise RuntimeError("deserialize_cuda_engine failed for %s (%d bytes); engine must be built with the "
-                               "same TensorRT version on this device" % (engine_path, len(data)))
+            raise RuntimeError("deserialize_cuda_engine failed for %s (%d bytes, dla_core=%s); engine must be built with "
+                               "the same TensorRT version on this device" % (engine_path, len(data), dla_core))
         self.context = self.engine.create_execution_context()
         if self.context is None:
             raise RuntimeError("create_execution_context failed (GPU memory?)")
@@ -304,11 +307,12 @@ def pin_layers(trt, network, indices, dtype):
 
 
 def build_engine(onnx_path, engine_path, precision, calib_dir=None, calib_cache=None, workspace_mb=1024, calib_algo="entropy2",
-                 fp16_layers=None, fp32_layers=None, inspect_path=None, quantile=0.9999):
+                 fp16_layers=None, fp32_layers=None, inspect_path=None, quantile=0.9999, dla_core=None):
     """Build and save an engine with the TensorRT python builder. Returns build seconds.
 
     fp16_layers / fp32_layers: layer specs (see select_layers) pinned to that precision. fp32 is applied last.
     Pinning sets OBEY_PRECISION_CONSTRAINTS (TensorRT >= 8.2). inspect_path writes the per-layer engine JSON.
+    dla_core: None = GPU only. N = DLA core N as default device with GPU_FALLBACK (the build log lists the layers per device).
     """
     import tensorrt as trt
     if precision not in ("fp16", "int8", "fp32"):
@@ -332,6 +336,12 @@ def build_engine(onnx_path, engine_path, precision, calib_dir=None, calib_cache=
         config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, ws)
     else:
         config.max_workspace_size = ws
+    if dla_core is not None:
+        if int(dla_core) < 0 or int(dla_core) >= builder.num_DLA_cores:
+            raise ValueError("dla_core=%s but the builder reports %d DLA cores" % (dla_core, builder.num_DLA_cores))
+        config.default_device_type = trt.DeviceType.DLA
+        config.DLA_core = int(dla_core)
+        config.set_flag(trt.BuilderFlag.GPU_FALLBACK)
     pinned = {}
     if fp16_layers or fp32_layers:
         if precision == "fp32":
@@ -373,6 +383,8 @@ def build_engine(onnx_path, engine_path, precision, calib_dir=None, calib_cache=
     secs = time.time() - t0
     if inspect_path:
         runtime = trt.Runtime(logger)
+        if dla_core is not None:
+            runtime.DLA_core = int(dla_core)
         eng = runtime.deserialize_cuda_engine(bytes(blob))
         if eng is None:
             raise RuntimeError("cannot deserialize %s for inspection" % engine_path)
@@ -396,14 +408,16 @@ def _cli():
     b.add_argument("--fp16-layers", help="e.g. head,name:/layer3/layer3.5/  (tokens: head | idx:A-B | name:SUBSTR)")
     b.add_argument("--fp32-layers", help="same grammar; applied after --fp16-layers")
     b.add_argument("--inspect", help="write per-layer engine info (JSON) to this path")
+    b.add_argument("--dla-core", type=int, default=None, help="build for this DLA core (GPU fallback enabled)")
     r = sub.add_parser("bench")
     r.add_argument("--engine", required=True)
     r.add_argument("--images", required=True)
     r.add_argument("--n", type=int, default=200)
+    r.add_argument("--dla-core", type=int, default=None, help="execute on this DLA core (runtime.DLA_core)")
     a = ap.parse_args()
     if a.cmd == "build":
         s = build_engine(a.onnx, a.engine, a.precision, a.calib_dir, a.calib_cache, a.workspace_mb, a.calib_algo,
-                         a.fp16_layers, a.fp32_layers, a.inspect, a.quantile)
+                         a.fp16_layers, a.fp32_layers, a.inspect, a.quantile, a.dla_core)
         print("built %s (%s) in %.1f s" % (a.engine, a.precision, s))
         return 0
     if a.cmd == "bench":
@@ -411,7 +425,7 @@ def _cli():
         if not files:
             print("no png in %s" % a.images)
             return 1
-        with TrtRunner(a.engine) as rn:
+        with TrtRunner(a.engine, a.dla_core) as rn:
             rn.infer(load_rgb_nhwc(files[0]))  # warm-up
             tp = ti = 0.0
             for k in range(a.n):

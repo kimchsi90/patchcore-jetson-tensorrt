@@ -299,3 +299,41 @@ Table columns: aligned image max / pixel / AUPRO ; mismatched (Pillow bank) pixe
 | toothbrush | area | .9000/.9873/.8610 | .9879/.8688 |
 | toothbrush | linear | .9056/.9877/.8661 | .9878/.8687 |
 Screw coreset 5% aligned: pil_aa .9664/.9889/.9409 ; linear .9779/.9920/.9572.
+
+
+## anomalib-default baseline re-measured on TensorRT 8.5.2 (JetPack 5.1.4) - bottle/256, fp16, 10W - added 2026-11-01
+Board dir ~/base514/ (parse_check.py, build_baseline.py, dump_baseline.py, head_debug.py, trt_runner.py, full_514.sh, run_all_514.sh, heads_514.sh, time_baseline.sh).
+PC helpers: fold_variants_514.py (copy of fold_baseline.py with --no-topk-fix / --no-flatten-fix), head_variant_514.py, compare_head_514.py.
+New ONNX (in patchcore\work\bottle_256\baseline\): anomalib_b1_foldonly.onnx (op17 + constant folding, Flatten and TopK left as exported), head_foldonly_b1.onnx (+_ref.npz), head_folded_b1.onnx.
+Logs/results: out\baseline514_*.json/.npy, out\baseline514_variants.json, out\b514\ (build, trtexec, dump logs, free -m samples every 3 s).
+Parse check = TRT python OnnxParser (parse_check.py), not trtexec: `trtexec --skipInference` also builds the engine (about 12 min here), so the build step was the build_baseline.py run.
+
+Which workarounds are still needed on 8.5.2 (all measured):
+  variant                                        parse                         fp16 build + 83 images (image / pixel / AUPRO)
+  legacy op17, no fixes                          FAILS (post_processor/ConstantOfShape: INVALID_NODE, "Weights of same values but of different types")  -
+  anomalib dynamo export (opset 18, batch 2)     FAILS (node_cat_1: error while computing output extent)                                              -
+  op17 + constant folding only (foldonly)        OK                            built 721.8 s; 1.0000 / 0.9854 / 0.9447, trtexec 63.66 ms
+  op17 + folding + Flatten->Reshape + TopK fix   OK                            built 724.3 s; 1.0000 / 0.9854 / 0.9446, trtexec 63.61 ms
+  => (1) TorchScript op17 export: still needed in the sense that the dynamo export does not parse (cause not analyzed; folding was not tried on it).
+     (2) constant folding of the zero-element nodes: still needed (the unfolded op17 export does not parse).
+     (3) Flatten(axis==rank)->Reshape: NOT needed (foldonly engine scores equal; head-only fp32 pred_score max abs diff 6e-6 vs ORT).
+     (4) TopK largest=0 -> Neg/TopK/Neg: NOT needed (foldonly engine scores equal; head-only fp32: TopK indices equal 1.0000, so largest=0 is honored).
+  The "folded, Flatten fixed, TopK unfixed" ONNX (anomalib_b1_folded.onnx) was only parsed (OK), not built: its head-only engines were stopped to save board time; foldonly covers both changes at once.
+Head-only checks (7 embeddings, ORT fp32 reference): fp32 engine all outputs match (anomaly_map max abs 1.8e-5); fp16 engine shows the known fp16 nearest-neighbor
+deviation (NN index equal for 71% of patches, pred_score max abs 0.028, anomaly_map 0.071), as on 8.2.1.
+
+Results (83 bottle frames, 10W mode, GPU = trtexec GPU Compute mean of 100 it, py = dump_baseline.py H2D+exec+D2H per image):
+                      image   pixel   AUPRO   GPU ms           py ms/img  engine    build    RAM low-water during build (free / available)
+  ORT fp32 (PC)       1.0000  0.9853  0.9437  -                -          -         -        -
+  TRT 8.2.1 b1 fp16   1.0000  0.9854  0.9447  64.33            65.06      383.6 MB  487.9 s  ~100-300 MB free
+  TRT 8.5.2 b1 fp16   1.0000  0.9854  0.9446  63.61            64.95      313.5 MB  724.3 s  157 / 2433 MB
+  TRT 8.2.1 b2 fp16   1.0000  0.9854  0.9448  120.89 (60.4/i)  60.85      909.5 MB  522.6 s
+  TRT 8.5.2 b2 fp16   1.0000  0.9854  0.9447  115.29 (57.6/i)  58.43      313.5 MB  763.4 s  215 / 2129 MB
+  RKNN RK3588 fp16    1.0000  0.9854  -       977 ms
+Build warnings (8.5.2): INT64 weights cast to INT32; FP16 conversion of 48 subnormal / 38 below-minimum / 2 overflowing weights; "Some tactics do not have sufficient workspace memory" (workspace 1024 MB, same as before).
+GPU temperature stayed at 44.5-46 C at the end of each run; swap use after the builds 307-378 MB.
+
+Max-mode timing (root, run by the user): see board\time_baseline.sh.
+  ssh <user>@<board-ip>
+  sudo sh -c 'sh /home/<user>/perf_mode.sh on; sh /home/<user>/base514/time_baseline.sh; sh /home/<user>/perf_mode.sh off'
+  -> ~/base514/time/{b1,b2}.log (trtexec), {b1,b2}.tegra (tegrastats 200 ms), mode.txt, time.log, time.flag

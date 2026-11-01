@@ -1,0 +1,12 @@
+{
+ "board": "Xavier NX, JetPack 5.1.4, TensorRT 8.5.2.2, 10W mode (pmode:0005), bottle 256 fp16, 83 test images",
+ "onnx_variants": {
+  "legacy_b1_op17 (TorchScript op17, no fixes)": {"parse": "FAILED: In node 307 /post_processor/ConstantOfShape INVALID_NODE; Error Code 1: Weights of same values but of different types are used in the network", "build": "not attempted"},
+  "dynamo export anomalib_default.onnx (opset 18, input batch 2)": {"parse": "FAILED: node_cat_1: error while computing output extent (graphShapeAnalyzer)", "build": "not attempted"},
+  "foldonly (op17 + constant folding only)": {"parse": "OK 252 layers", "build_s": 721.8, "engine_bytes": 313608788, "image_auroc": 1.0, "pixel_auroc": 0.9854, "aupro": 0.9447, "trtexec_gpu_mean_ms": 63.664, "ram_free_min_mb": 242, "ram_available_min_mb": 2302},
+  "full fix (anomalib_b1_trt.onnx)": {"parse": "OK 253 layers", "build_s": 724.3, "engine_bytes": 313544085, "image_auroc": 1.0, "pixel_auroc": 0.9854, "aupro": 0.9446, "trtexec_gpu_mean_ms": 63.605, "py_ms_per_img": 64.95, "ram_free_min_mb": 157, "ram_available_min_mb": 2433},
+  "full fix b2": {"build_s": 763.4, "engine_bytes": 313515884, "image_auroc": 1.0, "pixel_auroc": 0.9854, "aupro": 0.9447, "trtexec_gpu_mean_ms": 115.293, "py_ms_per_img": 58.43, "ram_free_min_mb": 215, "ram_available_min_mb": 2129}
+ },
+ "head_only_check_fp32 (7 embeddings, ORT fp32 reference, onnx with TopK largest=0 and unfixed Flatten)": {"TopK_indices_equal": 1.0, "TopK_values_maxabs": 0.0442, "pred_score_maxabs": 6.2e-06, "anomaly_map_maxabs": 1.8e-05},
+ "head_only_check_fp16": {"pred_score_maxabs": 0.0282, "anomaly_map_maxabs": 0.0708, "nn_index_equal_frac": 0.714, "note": "same fp16 nearest-neighbor deviation as on 8.2.1"}
+}

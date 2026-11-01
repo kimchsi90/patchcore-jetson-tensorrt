@@ -11,7 +11,7 @@
 - 10분 연속 실행에서 GPU 클럭이 1109 MHz로 유지되었고 온도는 69.5°C에서 멈춤. 속도 저하가 없었음.
 - 후처리 전체와 원본 해상도 리사이즈를 ONNX 그래프 안으로 옮겨도 정확도가 유지됨. 끝단 측정에서 CPU 리사이즈가 병목이고, 리사이즈를 엔진 안으로 옮기면 CPU 사용이 10% 아래로 내려감.
 - 리사이즈를 별도 스레드로 분리한 파이프라인이 가장 큰 효과를 냄. GPU 워커 하나가 61.9에서 152.6 FPS가 되고(RK3588 방식 대비 약 2.9배), DLA 2개만으로 GPU 없이 128.6 FPS가 나옴.
-- anomalib 기본 설정 baseline은 TensorRT fp16에서 64 ms로 RK3588의 977 ms보다 빠르고 정확도는 같음.
+- anomalib 기본 설정 baseline은 TensorRT fp16에서 64 ms(10W 모드)로 RK3588의 977 ms보다 빠르고 정확도는 같음. 최적화한 혼합 엔진은 최고 성능 모드에서 baseline보다 약 7배 빠르고 장당 에너지는 약 1/7임.
 - 입력 리사이즈는 INTER_AREA를 표준으로 정함. 15개 카테고리 평균이 Pillow 방식과 같고(AUPRO +0.0006) 최악도 -0.0125임. INTER_LINEAR는 평균 AUPRO가 0.0047 낮아 카테고리별로 검증한 뒤에만 씀. bank를 다시 만들어도 일관된 이득이 없어 재생성하지 않음.
 - screw에서 coreset을 1%에서 5%로 올리면 AUPRO가 0.9165에서 0.9470이 되지만 처리량이 174 FPS에서 93 FPS로 줄고 장당 에너지가 2배가 됨. 1% coreset은 NPU에 맞춘 선택이었고 속도 면에서는 Jetson에서도 유효함.
 
@@ -174,19 +174,28 @@ screw, 입력 256, 384 채널, 혼합 정밀도 엔진, 최고 성능 모드, tr
 - screw의 coreset 5%는 정합한 LINEAR 위에서도 AUPRO를 0.9418에서 0.9572로 더 올림(fp32). 리사이즈 선택이 coreset 비율을 대체하지는 못함.
 ## baseline
 
-anomalib 기본 설정(coreset 10%, 1536 채널)을 TensorRT 8.2.1에서 실행함.
+anomalib 기본 설정(coreset 10%, 1536 채널)을 TensorRT fp16에서 실행함. bottle, 입력 256임.
 
 | 구성 | image AUROC | pixel AUROC | AUPRO | 지연 |
 |:---:|:---:|:---:|:---:|:---:|
 | onnxruntime fp32 | 1.0000 | 0.9853 | 0.9437 | 해당 없음 |
-| TensorRT fp16, batch 1 | 1.0000 | 0.9854 | 0.9447 | 64.3 ms |
-| TensorRT fp16, batch 2 | 1.0000 | 0.9854 | 0.9448 | 60.4 ms/장 |
+| TensorRT 8.2.1 fp16, batch 1 (10W 모드) | 1.0000 | 0.9854 | 0.9447 | 64.3 ms |
+| TensorRT 8.5.2 fp16, batch 1 (10W 모드) | 1.0000 | 0.9854 | 0.9446 | 63.6 ms |
+| TensorRT 8.5.2 fp16, batch 2 (10W 모드) | 1.0000 | 0.9854 | 0.9447 | 57.6 ms/장 |
 | RK3588 RKNN fp16 | 1.0000 | 0.9854 | 값 없음 | 977 ms |
 
-- TensorRT가 읽도록 ONNX를 네 곳 고쳤음: opset 17 TorchScript 내보내기, 후처리의 빈 상수 폴딩, Flatten을 Reshape로 교체, `TopK(largest=0)`을 부호 반전 후 `TopK(largest=1)`로 교체함.
-- 마지막 수정 전에는 TensorRT 8.2.1이 `largest=0`을 무시해서 image AUROC가 0.63이었음.
-- 이 baseline은 JetPack 4.6.1에서만 측정했고 5.1.4에서는 아직 다시 재지 않음.
+최고 성능 모드(TensorRT 8.5.2, fp16)의 속도와 에너지임.
 
+| 구성 | FPS | GPU 연산 | 평균 전력 | 장당 에너지 |
+|:---:|:---:|:---:|:---:|:---:|
+| baseline, batch 1 | 25.8 | 38.7 ms | 14.4 W | 558 mJ |
+| baseline, batch 2 | 29.4 | 68.0 ms/배치 | 14.9 W | 508 mJ |
+| 최적화 혼합 엔진 (참고) | 189.1 | 5.2 ms | 15.1 W | 80 mJ |
+
+- 최적화한 혼합 엔진이 baseline보다 약 7배 빠르고 장당 에너지는 약 1/7임. 정확도는 같음(pixel 0.9849 대 0.9854).
+- TensorRT가 읽도록 필요했던 ONNX 수정은 8.2.1에서 네 가지였으나 8.5.2에서는 두 가지임. 필요한 것은 opset 17 TorchScript 내보내기(anomalib 기본 내보내기는 파싱 실패)와 후처리의 빈 상수 폴딩(없으면 `ConstantOfShape` 오류)임. Flatten을 Reshape로 바꾸는 수정과 `TopK(largest=0)` 교체는 필요 없어졌고, 수정 없이도 점수가 같음.
+- 엔진 빌드는 8.5.2에서 약 720초(8.2.1은 약 490초)이고 크기는 313.5 MB(8.2.1은 384 MB)임. 빌드 중 여유 메모리가 157~242 MB까지 내려가고 스왑을 300 MB 안팎 씀.
+- fp16 엔진의 head 단독 점검에서 최근접 이웃 색인이 71%만 일치했지만 최종 점수에는 영향이 없음.
 ## 속도와 전력
 
 JetPack 5.1.4, TensorRT 8.5.2, bottle, 입력 256, batch 1임. 전력은 tegrastats의 VDD_IN(모듈 전체)이며 시간 평균임.
@@ -360,7 +369,6 @@ PC에서 onnxruntime으로 검증한 결과이며 TensorRT 실행과 속도 측�
 
 ## 확인하지 못한 항목
 
-- 5.1.4에서의 baseline(anomalib 기본 설정) 재측정.
 - GPU와 DLA를 하나의 파이프라인으로 묶었을 때 카테고리별 끝단 지연은 bottle에서만 측정함.
 - 파이프라인 방식의 지연 최적화(큐 깊이 1~2)를 최고 성능 모드에서 다시 측정하는 일과 DLA 구성의 입력 정규화 폴백 제거.
 - 끝단 처리량은 bottle에서만 측정함. 카테고리마다 bank 크기가 달라 속도가 달라짐.

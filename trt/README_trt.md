@@ -133,3 +133,62 @@ Bottle (83 test images, fp32 ref 1.0000 / 0.9848 / 0.9430; GPU mixed engine 1 / 
 Not measured: screw/wood/toothbrush/tile (the PC driver was stopped by the host for low memory after screw fp16 was built and dumped on the board
 (~/trt_dla/screw/out_fp16_*.npy, not scored)); two-core + GPU concurrent throughput; whether int8mix really executes int8 convs inside the
 DLA ForeignNode (the inspector only shows the ForeignNode; the 29 MB engine size vs 75 MB fp16 suggests int8 weights).
+
+
+## End-to-end benchmark (CPU resize + GPU/DLA engine + post), bottle, Xavier NX - added 2026-11-01
+Code: `board\bench_e2e.py` (modes bench | acc | micro), `board\build_e2e.py` + `board\build_e2e.sh` (engines), `board\run_suite.sh` (all timed configs),
+`pc\e2e_score.py` (accuracy on the PC). Board dir `~/e2e/` (engines/, onnx/, test900/ = the 83 original 900x900 frames, calib900/, results/, acc/, logs/).
+Frames are decoded once (cv2.imread, BGR->RGB) and kept as uint8 HWC in RAM; PNG decode is not timed. Timed loop = cv2.resize -> uint8->float32 copy into the
+pinned input buffer -> H2D -> execute_async_v2 -> D2H -> stream sync -> (P0 only) numpy/cv2 post. One thread, one engine/context/stream per worker.
+Pipelines: P0 = CPU resize + engine without post (`mixed_name.engine`: m, xproj) + CPU post (float32 numpy sqrt/top10, cv2 nearest x8, cv2.GaussianBlur 33x33 sigma 4
+reflect-101; matches graph_opt.host_post to 2e-5 score / 1.7e-4 map). P1 = CPU resize + engine with post inside (score_max, score_top10, map 256x256).
+P2 = 900x900 float32 input (9.72 MB), matmul (Pillow-weight) resize + post inside the engine. P3 = P1 whose backbone runs on the DLA (GPU fallback for the rest).
+Resize: `cv2.INTER_AREA` (default, closest to the Pillow antialias used for the 256 PNGs, NOT identical) or `cv2.INTER_LINEAR` (no antialias, ~ same error as
+graph_opt fullres_bilinear). Mean |uint8 diff| vs Pillow-resized calib image 000: AREA 0.40, LINEAR 1.30.
+Engines (int8 entropy2; stem+layer1.0+head fp16 as mixed_name; calibration = the same 100 train images, 256 px for P1/P3, original 900 px for P2):
+post layers (post_*, score_*, map) pinned fp32, P2 resize layers (fr_*) pinned fp32. `build_e2e.py` wraps trt_runner.pin_layers to skip Identity/int32 layers
+(the shared pin_layers made the post graph fail with "No supported formats for node_of_m").
+  p1_gpu_post.engine 28.9 MB, 230 s | p3_dla0_post.engine 29.3 MB, 89 s (calibration cache reused from P1) | p2_gpu_full900.engine 30.8 MB, 246 s.
+P3 placement (build log): 2 DLA subgraphs (pre_transpose..scale_operand_of_pre_sub; conv1..node_of_dk0); GPU = pre_sub/pre_div, node_of_gk0 (head ReduceMax),
+the whole post (TopK, Reduce, nearest Resize, blur conv; the 33-tap kernel exceeds the DLA limit of 32). One engine file runs on both cores via runtime.DLA_core.
+Accuracy, 83 bottle test frames at 900x900 (fp32 reference at 256 Pillow: 1.0000 / 0.9848 / 0.9430; scores in out\e2e_accuracy.json):
+                         img AUROC (max, top10)   pixel AUROC   AUPRO
+  P0 / P1 resize AREA     1.0000, 1.0000          0.9845        0.9428   (P0 and P1 agree: engine post == host post)
+  P0 / P1 resize LINEAR   1.0000, 1.0000          0.9830        0.9394
+  P2 matmul in-engine     1.0000, 1.0000          0.9849        0.9426
+  P3 DLA0 AREA            1.0000, 1.0000          0.9846        0.9428
+  P3 DLA0 LINEAR          1.0000, 1.0000          0.9831        0.9398
+Functional run in the default 10W mode, NOT final (4 cores online, DVFS: CPU 1.2-1.9 GHz, GPU 0.1-0.5 GHz; 20 s measured after 5 s warm-up; non-blocking CUDA streams),
+`out\e2e_functional_10W.json`, `out\e2eunc_10W_nb\*.json` (each has a `placement` field). An earlier identical run with blocking streams is in `out\e2eunc_10W_blockingstream_run1`.
+  config                    FPS    p50/p99 ms   CPU % (4 cores, whole system)
+  P0 gpu1 AREA              51.4   19.3/21.2    16     (first run: 43.2)
+  P0 gpu1 LINEAR            69.8   14.2/15.7    11
+  P1 gpu1 AREA              55.7   17.8/19.5    14
+  P1 gpu1 LINEAR            84.0   11.8/13.0    12
+  P1 gpu2 AREA              94.9   20.9/23.3    27
+  P1 gpu2 LINEAR            96.8   21.0/21.1    11
+  P2 gpu1                   58.1   17.0/19.2    12
+  P2 gpu2                   66.9   30.2/30.5     9
+  P3 dla0 AREA              33.4   30.0/31.9    12
+  P3 dla1 AREA              29.9   33.9/35.6    12
+  P3 dla0+dla1 AREA         55.8   35.7/35.9    22
+  P3 gpu+dla0+dla1 AREA     67.1   44.7/44.9    20
+  LINEAR: P3 dla0 46.3 | dla0+dla1 58.7 | gpu+dla0+dla1 68.3
+Stage means (ms/frame, 10W): CPU resize AREA 6.6-7.0 here (micro-benchmark 8.8), LINEAR 0.85-0.9; uint8->float32 copy 0.10 (256 px) / 0.86-1.0 (900 px);
+engine incl. H2D+D2H+sync 10.8-11.2 (P1 gpu), 16.2 (P2 gpu), 20.0 (P3 dla0); P0 host post 2.0-2.5 ms.
+Micro (single thread, `results\micro.json`): pinned H2D 9.72 MB = 2.5 ms (3.9 GB/s), 0.79 MB = 0.17 ms (the 1.7 ms of the first micro run was the idle-clock first copy).
+Findings:
+(1) cv2 INTER_AREA at 900->256 costs 7-9 ms on this CPU, about as much as the GPU exec; INTER_LINEAR is ~10x cheaper but loses 0.0015 pixel AUROC / 0.0034 AUPRO.
+(2) In-engine post saves only 2-2.5 ms per frame (P0 -> P1) because the host post is small.
+(3) Two GPU worker threads reach 95-97 FPS (0.36-0.84 cores busy per process), i.e. the GPU is saturated at ~21 ms per frame per worker; no GIL limit was visible for the GPU x2 case.
+(4) P2 (900x900 input, resize in the engine) is slower than P1+LINEAR at 10W (58.1 vs 84.0 FPS): the in-engine resize adds ~5 ms GPU time and 9.7 MB of input conversion/H2D; it saves the CPU resize only.
+(5) DLA workers: 33.4 / 29.9 FPS per core, both cores 55.8-58.7 FPS. The mixed GPU+DLA0+DLA1 threaded config is NOT reproducible in 10W mode: the same command
+gave 67.1 FPS (22.4 per worker, repeated 5 times), but also 104.3, 86.3 and 72.9 FPS in other runs (diag runs `out\e2e\diag`, 15 s each). This is independent of the stream
+type (blocking: 67.1 / 86.3 / 72.9, non-blocking: 67.1 / 104.3 / 67.2). Runs that started with the GPU at 114 MHz gave 67, runs that started at 204 MHz gave 73-104 (correlation only, 8 runs).
+A 3-process control (one gpu, one dla0, one dla1 process, 15 s) gave 27.0 + 35.0 + 34.8 = 96.8 FPS. Cause not established (DVFS / EMC / power cap are suspects); judge GPU+DLA only
+under fixed max clocks, with REPS=3 (`REPS=3 sh run_suite.sh`).
+Not verified: output correctness of concurrent workers (single-worker acc dumps only), the temperature guard under real heat (only the abort path, tested by lowering the limit),
+max power mode, power. The shared pin_layers failure was worked around in `build_e2e.py`, trt_runner.py was not changed.
+P0 engine: `~/e2e/engines/p0_gpu_mixed_name.engine` is a copy of the earlier `~/trt_run/mixed_name.engine` (27.5 MB, built 220 s, no post). Loading it prints the TensorRT warning
+"Using an engine plan file across different models of devices is not recommended"; the three engines built here do not print it in the acc runs (cause not investigated; P0 numbers are from that engine as is).
+Run: `sh ~/e2e/run_suite.sh <TAG>` (results in `~/e2e/results/<TAG>/`: one .log/.json per config, micro.json, suite.log; optional REPS=3, DURATION, WARMUP, config-name filter after TAG).

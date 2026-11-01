@@ -1,0 +1,78 @@
+{
+ "reference_fp32_host": {
+  "image_auroc_max": 1.0,
+  "image_auroc_top10": 1.0,
+  "pixel_auroc": 0.9848,
+  "aupro": 0.943
+ },
+ "P0_area": {
+  "image_auroc_max": 1.0,
+  "image_auroc_top10": 1.0,
+  "pixel_auroc": 0.9845,
+  "aupro": 0.9428,
+  "max_abs_diff_score_max": 1.8527853401781442,
+  "max_abs_diff_score_top10": 1.2415486706384513,
+  "max_abs_diff_map": 6.612555503845215,
+  "mean_abs_diff_map": 0.5211579203605652
+ },
+ "P0_linear": {
+  "image_auroc_max": 1.0,
+  "image_auroc_top10": 1.0,
+  "pixel_auroc": 0.983,
+  "aupro": 0.9394,
+  "max_abs_diff_score_max": 5.666035045769558,
+  "max_abs_diff_score_top10": 5.224477521898525,
+  "max_abs_diff_map": 10.462556838989258,
+  "mean_abs_diff_map": 2.126890182495117
+ },
+ "P1_area": {
+  "image_auroc_max": 1.0,
+  "image_auroc_top10": 1.0,
+  "pixel_auroc": 0.9845,
+  "aupro": 0.9428,
+  "max_abs_diff_score_max": 1.8527853401781442,
+  "max_abs_diff_score_top10": 1.241552485335717,
+  "max_abs_diff_map": 6.612554550170898,
+  "mean_abs_diff_map": 0.5211577415466309
+ },
+ "P1_linear": {
+  "image_auroc_max": 1.0,
+  "image_auroc_top10": 1.0,
+  "pixel_auroc": 0.983,
+  "aupro": 0.9394,
+  "max_abs_diff_score_max": 5.666035045769558,
+  "max_abs_diff_score_top10": 5.224477521898525,
+  "max_abs_diff_map": 10.462556838989258,
+  "mean_abs_diff_map": 2.126889944076538
+ },
+ "P2_gpu_matmul900": {
+  "image_auroc_max": 1.0,
+  "image_auroc_top10": 1.0,
+  "pixel_auroc": 0.9849,
+  "aupro": 0.9426,
+  "max_abs_diff_score_max": 1.613228479960327,
+  "max_abs_diff_score_top10": 1.6077138317712638,
+  "max_abs_diff_map": 6.742481231689453,
+  "mean_abs_diff_map": 0.29659798741340637
+ },
+ "P3_dla0_area": {
+  "image_auroc_max": 1.0,
+  "image_auroc_top10": 1.0,
+  "pixel_auroc": 0.9846,
+  "aupro": 0.9428,
+  "max_abs_diff_score_max": 2.1534140022875192,
+  "max_abs_diff_score_top10": 1.810907496322045,
+  "max_abs_diff_map": 6.159261703491211,
+  "mean_abs_diff_map": 0.5508516430854797
+ },
+ "P3_dla0_linear": {
+  "image_auroc_max": 1.0,
+  "image_auroc_top10": 1.0,
+  "pixel_auroc": 0.9831,
+  "aupro": 0.9398,
+  "max_abs_diff_score_max": 5.653995861199245,
+  "max_abs_diff_score_top10": 5.03991102409579,
+  "max_abs_diff_map": 10.031543731689453,
+  "mean_abs_diff_map": 2.0814907550811768
+ }
+}

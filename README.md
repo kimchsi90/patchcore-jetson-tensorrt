@@ -46,6 +46,15 @@ MVTec AD, 입력 256, JetPack 5.1.4임.
 
 스크립트의 경로는 `D:\jetson_test` 기준이며 환경에 맞게 바꿔야 함.
 
+## LLM 단계 (같은 보드)
+
+PatchCore 다음 단계로 같은 Xavier NX에서 언어 모델을 측정함. 상세 결과와 재현 스크립트는 [llm/README_llm.md](llm/README_llm.md)에 있음.
+
+- llama.cpp(CUDA, sm_72)로 Qwen2.5-1.5B Q4_K_M을 실행함. 최대 성능 모드에서 프리필 758 tok/s, 디코딩 34.2 tok/s임. 10W 모드는 459 tok/s와 18.3 tok/s임.
+- `llama-server`로 서빙하면 동시 접속 4개에서 총 73.5 tok/s, 첫 토큰 지연은 0.12초 이하임.
+- vLLM 0.2.2는 소스 빌드와 호환용 shim 두 개로 동작함. 참고 결과로만 두었음.
+- PatchCore 2-DLA 파이프라인과 LLM을 동시에 돌리면 LLM 디코딩은 31%, PatchCore는 24% 느려짐. GPU 파이프라인과 같이 돌리면 각각 59%와 67% 느려짐.
+
 ## 주의 사항
 
 - 엔진과 보정 캐시는 TensorRT 버전과 기기에 종속되므로 JetPack을 바꾸면 다시 만들어야 함.

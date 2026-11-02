@@ -204,7 +204,15 @@ def load_rgb_nhwc(path):
     if bgr is None:
         raise IOError("cannot read image: %s" % path)
     rgb = np.ascontiguousarray(bgr[:, :, ::-1])
-    return rgb.astype(np.float32)[None]
+    x = rgb.astype(np.float32)[None]
+    pad = int(os.environ.get("BORDER_INPUT", "0"))  # engines built from fold_norm.py --border graphs expect a mean-filled frame
+    if pad:
+        mean = np.array([0.485, 0.456, 0.406], np.float32).reshape(1, 1, 1, 3) * 255.0
+        xb = np.empty((1, x.shape[1] + 2 * pad, x.shape[2] + 2 * pad, 3), np.float32)
+        xb[:] = mean
+        xb[:, pad:-pad, pad:-pad] = x
+        x = xb
+    return x
 
 
 def _make_calibrator(trt, files, input_shape, cache_path, cuda, algo="entropy2", quantile=0.9999):

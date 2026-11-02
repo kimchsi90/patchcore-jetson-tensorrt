@@ -59,7 +59,15 @@ def load_rgb(path, use_cv2):
     bgr = cv2.imread(path, cv2.IMREAD_COLOR)
     if bgr is None:
         return None
-    return np.ascontiguousarray(bgr[:, :, ::-1]).astype(np.float32)[None]
+    x = np.ascontiguousarray(bgr[:, :, ::-1]).astype(np.float32)[None]
+    pad = int(os.environ.get("BORDER_INPUT", "0"))  # engines built from fold_norm.py --border graphs expect a mean-filled frame
+    if pad:
+        mean = np.array([0.485, 0.456, 0.406], np.float32).reshape(1, 1, 1, 3) * 255.0
+        xb = np.empty((1, x.shape[1] + 2 * pad, x.shape[2] + 2 * pad, 3), np.float32)
+        xb[:] = mean
+        xb[:, pad:-pad, pad:-pad] = x
+        x = xb
+    return x
 
 
 def main() -> int:

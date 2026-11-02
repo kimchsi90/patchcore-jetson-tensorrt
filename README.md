@@ -2,7 +2,7 @@
 
 이상 탐지 모델 PatchCore를 Jetson Xavier NX(GPU와 DLA 2개)에서 TensorRT로 실행하고, RK3588 NPU 연구([patchcore-rk3588-npu](https://github.com/kimchsi90/patchcore-rk3588-npu))와 같은 항목을 재현하는 저장소임. NPU 설계를 그대로 옮기지 않고, Jetson의 특성에 맞게 최적화와 측정 방법을 바꾸는 것이 목표임.
 
-상태: 진행 중. JetPack 5.1.4(TensorRT 8.5.2)에서 15개 카테고리 정확도, 속도, 전력, 열 안정성을 측정함. DLA 정확도와 그래프 수준 변환의 TensorRT 속도는 측정 전임. 자세한 내용은 [docs/REPORT_KR.md](docs/REPORT_KR.md)에 있음.
+상태: 진행 중. JetPack 5.1.4(TensorRT 8.5.2)에서 15개 카테고리 정확도, 속도, 전력, 열 안정성을 측정함. 자세한 내용은 [docs/REPORT_KR.md](docs/REPORT_KR.md)에 있음.
 
 ## 현재까지의 결과
 
@@ -23,6 +23,7 @@ MVTec AD, 입력 256, JetPack 5.1.4임.
 - anomalib 기본 설정 baseline은 TensorRT 8.5.2 fp16에서 63.6 ms(10W 모드), 최고 성능 모드에서 25.8 FPS이며 RK3588의 977 ms보다 빠름. 최적화한 혼합 엔진(189 FPS)은 baseline보다 약 7배 빠르고 장당 에너지는 약 1/7임.
 - screw에서 coreset 1%를 5%로 올리면 AUPRO가 0.9165에서 0.9470이 되지만 처리량은 174 FPS에서 93 FPS로 줄고 장당 에너지가 2배가 됨(TensorRT 혼합 엔진, 최고 성능 모드).
 - 후처리와 원본 해상도 리사이즈를 ONNX 그래프 안으로 옮겨도 정확도가 유지됨. 끝단 측정(최고 성능 모드)에서 CPU 리사이즈가 병목이며, 리사이즈를 엔진 안으로 옮기면 CPU 사용이 10% 아래로 내려가고 124 FPS(GPU 워커 2개)가 나옴.
+- 추가 측정으로 전원 모드 9종, DLA 입력 정규화 폴백 제거 시험, 15개 카테고리 끝단 처리량을 [docs/REPORT_KR.md](docs/REPORT_KR.md)에 정리함. 기본 10W 데스크톱 모드는 GPU 클럭이 510 MHz로 묶여 10W 4코어 모드보다 38% 느림.
 
 ## 폴더 구성
 

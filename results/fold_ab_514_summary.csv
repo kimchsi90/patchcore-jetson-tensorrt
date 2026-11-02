@@ -1,0 +1,5 @@
+variant,fps_r1,fps_r2,fps_r3,fps_median,p50_ms,power_mW,gr3d_pct,mJ_per_img
+orig,127.1,128.0,127.7,127.7,65.4,9270,7.4,72.6
+fold,111.2,111.5,110.9,111.2,74.6,8692,4.8,78.2
+orig r3 rc=0 22:11:05
+fold r3 rc=0 22:11:41

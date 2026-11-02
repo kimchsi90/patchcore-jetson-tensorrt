@@ -34,6 +34,7 @@ from trt_runner import Cudart, TrtRunner  # noqa: E402
 
 TEMP_LIMIT_MC = int(os.environ.get("E2E_TEMP_LIMIT_MC", "82000"))  # env override is for testing the abort path only
 INTERPS = {"area": cv2.INTER_AREA, "linear": cv2.INTER_LINEAR}
+NCHW = False  # engine input is [1,3,H,W] (fold_norm.py --nchw): feeders write the transposed image
 BORDER = 0  # >0: engine built from a fold_norm.py --border graph; the input buffer carries a BORDER-pixel frame prefilled with mean*255
 MEAN255 = np.array([0.485, 0.456, 0.406], np.float32) * 255.0
 
@@ -149,8 +150,8 @@ class PostRunner(TrtRunner):
             import ctypes
             ptr = self.cuda.host_alloc(nbytes)
             self.host.append(np.frombuffer((ctypes.c_char * nbytes).from_address(ptr), dtype=dt).reshape(shape))
-            if BORDER and self.engine.binding_is_input(i) and len(shape) == 4 and shape[3] == 3:
-                self.host[-1][:] = MEAN255  # mean-filled frame; only the interior is rewritten per frame
+            if BORDER and self.engine.binding_is_input(i) and len(shape) == 4 and (shape[1] == 3 if NCHW else shape[3] == 3):
+                self.host[-1][:] = MEAN255.reshape(3, 1, 1) if NCHW else MEAN255  # mean-filled frame; only the interior is rewritten per frame
             self.host_ptr.append(ptr)
             self.names.append(name)
             self.is_input.append(self.engine.binding_is_input(i))
@@ -182,9 +183,10 @@ class Pipe(object):
             if s[1] != 900 or s[2] != 900:
                 raise ValueError("P2 needs a 900x900 input engine, got %s" % (s,))
         else:
-            if s[1] != s[2]:
+            if (s[2] != s[3]) if NCHW else (s[1] != s[2]):
                 raise ValueError("expected square network input, got %s" % (s,))
-            self.small = np.empty((s[1] - 2 * BORDER, s[2] - 2 * BORDER, 3), np.uint8)
+            hh, ww = (s[2], s[3]) if NCHW else (s[1], s[2])
+            self.small = np.empty((hh - 2 * BORDER, ww - 2 * BORDER, 3), np.uint8)
         self.interp = INTERPS[interp]
         if nb_stream:  # non-blocking stream: does not synchronize with the legacy default stream
             import ctypes
@@ -245,7 +247,10 @@ class Pipe(object):
         t0 = time.perf_counter()
         cv2.resize(frame, (self.small.shape[1], self.small.shape[0]), dst=self.small, interpolation=self.interp)
         t1 = time.perf_counter()
-        if BORDER:
+        if NCHW:
+            B = BORDER
+            r.host[r.in_idx][0, :, B:r.host[r.in_idx].shape[2] - B, B:r.host[r.in_idx].shape[3] - B] = self.small.transpose(2, 0, 1)
+        elif BORDER:
             r.host[r.in_idx][:, BORDER:-BORDER, BORDER:-BORDER] = self.small[None]
         else:
             np.copyto(r.host[r.in_idx], self.small[None])
@@ -296,7 +301,10 @@ class Pipe(object):
             cv2.resize(frame, (self.small.shape[1], self.small.shape[0]), dst=self.small, interpolation=self.interp)
             src = self.small
         t1 = time.perf_counter()
-        if BORDER and self.kind != "P2":
+        if NCHW and self.kind != "P2":
+            B = BORDER
+            r.host[r.in_idx][0, :, B:r.host[r.in_idx].shape[2] - B, B:r.host[r.in_idx].shape[3] - B] = src.transpose(2, 0, 1)
+        elif BORDER and self.kind != "P2":
             r.host[r.in_idx][:, BORDER:-BORDER, BORDER:-BORDER] = src[None]  # border was prefilled with mean*255
         else:
             np.copyto(r.host[r.in_idx], src[None])  # uint8 -> float32 into the pinned buffer
@@ -559,7 +567,7 @@ def run_pipelined(a, acc=False):
     views = [np.frombuffer((ctypes.c_char * nbytes).from_address(p), dtype=np.float32).reshape(shape0) for p in ptrs]
     if BORDER:
         for v in views:
-            v[:] = MEAN255  # border stays untouched: feeders only write the interior
+            v[:] = MEAN255.reshape(3, 1, 1) if NCHW else MEAN255  # border stays untouched: feeders only write the interior
     free_q, ready_q = queue.Queue(), queue.Queue(maxsize=depth)
     post_q = queue.Queue(maxsize=max(4, 2 * depth)) if a.post_threads > 0 else None
     for b in range(nbuf):
@@ -570,7 +578,7 @@ def run_pipelined(a, acc=False):
     lats = [[] for _ in pipes]
     qw = [[] for _ in pipes]
     interp = INTERPS[a.interp]
-    H, W = shape0[1], shape0[2]
+    H, W = (shape0[2], shape0[3]) if NCHW else (shape0[1], shape0[2])
     fst = [dict(resize=0.0, copy=0.0, free_wait=0.0, put_wait=0.0, n=0) for _ in range(R)]
     ast = [dict(wait=0.0, dev=0.0, post=0.0, post_put_wait=0.0, n=0) for _ in range(nw)]
     pst = [dict(wait=0.0, post=0.0, n=0) for _ in range(max(a.post_threads, 0))]
@@ -612,7 +620,9 @@ def run_pipelined(a, acc=False):
                 else:
                     cv2.resize(fr, (W - 2 * BORDER, H - 2 * BORDER), dst=small, interpolation=interp)
                     t1 = time.perf_counter()
-                    if BORDER:
+                    if NCHW:
+                        np.copyto(views[b][0][:, BORDER:H - BORDER, BORDER:W - BORDER], small.transpose(2, 0, 1))
+                    elif BORDER:
                         np.copyto(views[b][0][BORDER:-BORDER, BORDER:-BORDER], small)
                     else:
                         np.copyto(views[b][0], small)
@@ -929,13 +939,15 @@ def main():
     ap.add_argument("--pipelined", action="store_true", help="stage-decoupled mode (bench and acc; P1/P2/P4). Default off: sequential workers as before")
     ap.add_argument("--resize-threads", type=int, default=2, help="pipelined: feeder threads (cv2 resize + uint8->fp32 copy; for P2 only the copy)")
     ap.add_argument("--post-threads", type=int, default=0, help="pipelined P4: CPU post thread pool size; 0 = post inline in the accelerator thread")
+    ap.add_argument("--nchw", action="store_true", help="engine input is NCHW (fold_norm.py --nchw)")
     ap.add_argument("--border", type=int, default=0, help="engine from a fold_norm.py --border graph: pixels of the mean-filled frame around the image")
     ap.add_argument("--queue-depth", type=int, default=4, help="pipelined: depth of the shared ready queue")
     ap.add_argument("--cv-threads", type=int, default=None, help="pipelined: cv2.setNumThreads(N); default leaves OpenCV alone")
     ap.add_argument("--acc-workers", type=int, default=1, help="pipelined acc: use the first N workers of --workers (default 1)")
     a = ap.parse_args()
-    global BORDER
+    global BORDER, NCHW
     BORDER = a.border
+    NCHW = a.nchw
     if a.mode == "micro":
         res = run_micro(a)
     elif not a.workers:

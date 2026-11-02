@@ -67,6 +67,8 @@ def load_rgb(path, use_cv2):
         xb[:] = mean
         xb[:, pad:-pad, pad:-pad] = x
         x = xb
+    if os.environ.get("NCHW_INPUT") == "1":  # engines built from fold_norm.py --nchw graphs take NCHW
+        x = np.ascontiguousarray(x.transpose(0, 3, 1, 2))
     return x
 
 

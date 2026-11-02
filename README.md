@@ -23,7 +23,7 @@ MVTec AD, 입력 256, JetPack 5.1.4임.
 - anomalib 기본 설정 baseline은 TensorRT 8.5.2 fp16에서 63.6 ms(10W 모드), 최고 성능 모드에서 25.8 FPS이며 RK3588의 977 ms보다 빠름. 최적화한 혼합 엔진(189 FPS)은 baseline보다 약 7배 빠르고 장당 에너지는 약 1/7임.
 - screw에서 coreset 1%를 5%로 올리면 AUPRO가 0.9165에서 0.9470이 되지만 처리량은 174 FPS에서 93 FPS로 줄고 장당 에너지가 2배가 됨(TensorRT 혼합 엔진, 최고 성능 모드).
 - 후처리와 원본 해상도 리사이즈를 ONNX 그래프 안으로 옮겨도 정확도가 유지됨. 끝단 측정(최고 성능 모드)에서 CPU 리사이즈가 병목이며, 리사이즈를 엔진 안으로 옮기면 CPU 사용이 10% 아래로 내려가고 124 FPS(GPU 워커 2개)가 나옴.
-- 추가 측정으로 전원 모드 9종, DLA 입력 정규화 폴백 제거 시험, 15개 카테고리 끝단 처리량을 [docs/REPORT_KR.md](docs/REPORT_KR.md)에 정리함. 기본 10W 데스크톱 모드는 GPU 클럭이 510 MHz로 묶여 10W 4코어 모드보다 38% 느림.
+- 추가 측정(전원 모드 9종, DLA 입력 정규화 폴딩, 15개 카테고리 끝단 처리량)은 [docs/REPORT_KR.md](docs/REPORT_KR.md)에 있음. 10W 4코어 모드는 기본 10W 모드보다 40% 빠르고 장당 에너지가 46% 낮음. GPU와 DLA 코어 1개를 함께 쓰면 15개 카테고리 평균 193.5 FPS로 GPU 단독(149.9 FPS)보다 29% 빠르고 장당 에너지가 18% 낮음. DLA 2개까지 함께 쓰면 오히려 102.5 FPS로 떨어짐.
 
 ## 폴더 구성
 
@@ -51,7 +51,7 @@ MVTec AD, 입력 256, JetPack 5.1.4임.
 
 PatchCore 다음 단계로 같은 Xavier NX에서 언어 모델을 측정함. 상세 결과와 재현 스크립트는 [llm/README_llm.md](llm/README_llm.md)에 있음.
 
-- llama.cpp(CUDA, sm_72)로 Qwen2.5-1.5B Q4_K_M을 실행함. 최대 성능 모드에서 프리필 758 tok/s, 디코딩 34.2 tok/s임. 10W 모드는 459 tok/s와 18.3 tok/s임.
+- llama.cpp(CUDA, sm_72)로 Qwen2.5-1.5B Q4_K_M을 실행함. 최대 성능 모드에서 프리필 762 tok/s, 디코딩 34.2 tok/s임. 10W 모드는 458 tok/s와 18.4 tok/s임. CPU만 쓰면 프리필 8.7 - 9.8 tok/s, 디코딩 5.9 - 6.3 tok/s임.
 - `llama-server`로 서빙하면 동시 접속 4개에서 총 73.5 tok/s, 첫 토큰 지연은 0.12초 이하임.
 - vLLM 0.2.2는 소스 빌드와 호환용 shim 두 개로 동작함. 참고 결과로만 두었음.
 - PatchCore 2-DLA 파이프라인과 LLM을 동시에 돌리면 LLM 디코딩은 31%, PatchCore는 24% 느려짐. GPU 파이프라인과 같이 돌리면 각각 59%와 67% 느려짐.

@@ -23,7 +23,7 @@ MEAN255 = np.array([0.485, 0.456, 0.406], np.float32) * 255.0
 STD255 = np.array([0.229, 0.224, 0.225], np.float32) * 255.0
 
 
-def fold(model, border=False):
+def fold(model, border=False, nchw=False):
     g = model.graph
     by_name = {n.name: n for n in g.node}
     for need in ("pre_transpose", "pre_sub", "pre_div"):
@@ -69,6 +69,14 @@ def fold(model, border=False):
     for init in [i for i in g.initializer if i.name in ("pre_mean255", "pre_std255") and i.name not in used]:
         g.initializer.remove(init)
     g.input[0].name = "image_nhwc"  # same name; the value now means RGB - mean255
+    if nchw:  # latency experiment only: take NCHW input, no Transpose in the graph
+        t = by_name["pre_transpose"]
+        conv.input[0] = "image_nchw"
+        g.node.remove(t)
+        d = g.input[0].type.tensor_type.shape.dim
+        h, w = d[1].dim_value, d[2].dim_value
+        g.input[0].name = "image_nchw"
+        d[1].dim_value, d[2].dim_value, d[3].dim_value = 3, h, w
     return model
 
 
@@ -77,10 +85,11 @@ def main():
     ap.add_argument("src")
     ap.add_argument("dst")
     ap.add_argument("--border", action="store_true")
+    ap.add_argument("--nchw", action="store_true", help="latency experiment: NCHW input without the Transpose node")
     ap.add_argument("--verify-images")
     ap.add_argument("--n", type=int, default=5)
     a = ap.parse_args()
-    m = fold(onnx.load(a.src), a.border)
+    m = fold(onnx.load(a.src), a.border, a.nchw)
     checker.check_model(m)
     onnx.save(m, a.dst)
     print("saved", a.dst, [n.name for n in m.graph.node][:4])
